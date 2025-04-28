@@ -31,6 +31,7 @@ function local_stories_render_navbar_output(\core_renderer $renderer) {
     global $PAGE;
     // Подключаем JS для управления модальным окном
     $PAGE->requires->js_call_amd('local_stories/modal', 'init');
+    $PAGE->requires->js_call_amd('local_stories/stories', 'init');
     // Только navbar, без модалки!
     return $renderer->render_from_template('local_stories/navbar', []);
 }

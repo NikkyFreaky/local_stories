@@ -19,8 +19,12 @@
                         </div>
                         <label class="stories-file-btn btn btn-light">
                             Выбрать файл
-                            <input type="file" class="stories-file-input d-none" data-action="select-file" />
+                            <input type="file" class="stories-file-input d-none" data-action="select-file" accept="image/*,video/*" />
                         </label>
+                    </div>
+                    <div class="stories-preview-container d-none w-100 h-100">
+                        <img class="stories-preview-image d-none w-100 h-100 object-fit-contain" alt="Preview">
+                        <video class="stories-preview-video d-none w-100 h-100" controls></video>
                     </div>
                 </div>
                 <!-- Правая часть: инструменты -->
