@@ -1,0 +1,30 @@
+<div id="stories-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="storiesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="storiesModalLabel">Создание истории</h5>
+                <button type="button" class="close" data-action="close-modal" aria-label="Закрыть">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" data-region="stories-modal-body">
+                <div class="d-flex">
+                    <div class="flex-grow-1 editor-canvas bg-light p-3">
+                        <!-- Превью слайдов истории -->
+                    </div>
+                    <div class="editor-toolbar ms-3">
+                        <button type="button" class="btn btn-outline-primary mb-2" data-action="add-slide">
+                            <i class="fa fa-plus"></i> Добавить слайд
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary mb-2" data-action="preview-story">
+                            <i class="fa fa-eye"></i> Предпросмотр
+                        </button>
+                        <button type="button" class="btn btn-primary" data-action="publish-story">
+                            <i class="fa fa-check"></i> Опубликовать
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 

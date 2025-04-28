@@ -28,7 +28,14 @@ defined('MOODLE_INTERNAL') || die();
  * @return string HTML for stories buttons.
  */
 function local_stories_render_navbar_output(\core_renderer $renderer) {
-    // Данные для шаблона (если нужны динамические параметры).
-    $data = [];
-    return $renderer->render_from_template('local_stories/navbar', $data);
+    global $PAGE;
+    // Подключаем JS для управления модальным окном
+    $PAGE->requires->js_call_amd('local_stories/modal', 'init');
+    // Только navbar, без модалки!
+    return $renderer->render_from_template('local_stories/navbar', []);
+}
+
+function local_stories_before_footer() {
+    global $OUTPUT;
+    echo $OUTPUT->render_from_template('local_stories/create_modal', []);
 } 
