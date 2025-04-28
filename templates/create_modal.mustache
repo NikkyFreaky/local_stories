@@ -1,29 +1,42 @@
 <div id="stories-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="storiesModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
+    <div class="modal-dialog stories-modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content stories-modal-content">
+            <div class="modal-header stories-modal-header">
                 <h5 class="modal-title" id="storiesModalLabel">Создание истории</h5>
-                <button type="button" class="close" data-action="close-modal" aria-label="Закрыть">
+                <button type="button" class="stories-modal-close btn-close" data-action="close-modal" aria-label="Закрыть">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body" data-region="stories-modal-body">
-                <div class="d-flex">
-                    <div class="flex-grow-1 editor-canvas bg-light p-3">
-                        <!-- Превью слайдов истории -->
-                    </div>
-                    <div class="editor-toolbar ms-3">
-                        <button type="button" class="btn btn-outline-primary mb-2" data-action="add-slide">
-                            <i class="fa fa-plus"></i> Добавить слайд
-                        </button>
-                        <button type="button" class="btn btn-outline-secondary mb-2" data-action="preview-story">
-                            <i class="fa fa-eye"></i> Предпросмотр
-                        </button>
-                        <button type="button" class="btn btn-primary" data-action="publish-story">
-                            <i class="fa fa-check"></i> Опубликовать
-                        </button>
+            <div class="modal-body stories-modal-body d-flex p-4">
+                <!-- Левая часть: предпросмотр и загрузка файла -->
+                <div class="stories-editor-canvas flex-grow-1 d-flex flex-column align-items-center justify-content-center">
+                    <div class="stories-dropzone w-100 h-100 d-flex flex-column align-items-center justify-content-center">
+                        <div class="stories-dropzone-icon mb-3">
+                            <i class="fa fa-upload" aria-hidden="true"></i>
+                        </div>
+                        <div class="stories-dropzone-text mb-3">
+                            Перетащите сюда фото или видео
+                        </div>
+                        <label class="stories-file-btn btn btn-light">
+                            Выбрать файл
+                            <input type="file" class="stories-file-input d-none" data-action="select-file" />
+                        </label>
                     </div>
                 </div>
+                <!-- Правая часть: инструменты -->
+                <div class="stories-editor-toolbar d-flex flex-column align-items-end ms-4">
+                    <button type="button" class="stories-tool-btn stories-tool-text btn btn-light mb-2" data-action="add-text">
+                        <i class="fa fa-font me-2"></i>Текст
+                    </button>
+                    <button type="button" class="stories-tool-btn stories-tool-bg btn btn-light mb-2" data-action="set-bg">
+                        <i class="fa fa-image me-2"></i>Фон
+                    </button>
+                </div>
+            </div>
+            <div class="modal-footer stories-modal-footer justify-content-end">
+                <button type="button" class="stories-publish-btn btn btn-primary" data-action="publish-story">
+                    Опубликовать
+                </button>
             </div>
         </div>
     </div>
