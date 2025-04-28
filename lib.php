@@ -37,5 +37,6 @@ function local_stories_render_navbar_output(\core_renderer $renderer) {
 
 function local_stories_before_footer() {
     global $OUTPUT;
+    // Только вывод модалки, без подключения CSS!
     echo $OUTPUT->render_from_template('local_stories/create_modal', []);
 } 

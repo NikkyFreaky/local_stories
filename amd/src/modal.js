@@ -51,6 +51,12 @@ define(['jquery'], function ($) {
         }
       });
       window.StoriesModal = {show: showModal, hide: hideModal};
+
+      var $stories = $('.stories-nav');
+      var $usernav = $('#usernavigation');
+      if ($stories.length && $usernav.length) {
+        $usernav.prepend($stories);
+      }
     },
   };
 });
