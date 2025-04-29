@@ -1,44 +1,43 @@
 <div id="stories-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="storiesModalLabel" aria-hidden="true">
-    <div class="modal-dialog stories-modal-dialog modal-lg modal-dialog-centered" role="document">
-        <div class="modal-content stories-modal-content">
-            <div class="modal-header stories-modal-header">
-                <h5 class="modal-title" id="storiesModalLabel">Создание истории</h5>
-                <button type="button" class="stories-modal-close btn-close" data-action="close-modal" aria-label="Закрыть">
+    <div class="modal-dialog stories-modal__dialog" role="document">
+        <div class="modal-content stories-modal__content">
+            <div class="modal-header stories-modal__header">
+                <h5 class="stories-modal__title" id="storiesModalLabel">Создание истории</h5>
+                <button type="button" class="stories-modal__close btn-close" data-action="close-modal" aria-label="Закрыть">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body stories-modal-body d-flex p-4">
+            <div class="modal-body stories-modal__body">
                 <!-- Левая часть: предпросмотр и загрузка файла -->
-                <div class="stories-editor-canvas flex-grow-1 d-flex flex-column align-items-center justify-content-center">
-                    <div class="stories-dropzone w-100 h-100 d-flex flex-column align-items-center justify-content-center">
-                        <div class="stories-dropzone-icon mb-3">
+                <div class="stories-editor__canvas">
+                    <div class="stories-editor__dropzone">
+                        <div class="stories-editor__dropzone-icon">
                             <i class="fa fa-upload" aria-hidden="true"></i>
                         </div>
-                        <div class="stories-dropzone-text mb-3">
+                        <div class="stories-editor__dropzone-text">
                             Перетащите сюда фото или видео
                         </div>
-                        <label class="stories-file-btn btn btn-light">
-                            Выбрать файл
-                            <input type="file" class="stories-file-input d-none" data-action="select-file" accept="image/*,video/*" />
+                        <label class="stories-editor__file-btn">
+                            <input type="file" class="stories-editor__file-input" data-action="select-file" accept="image/*,video/*" />
                         </label>
                     </div>
-                    <div class="stories-preview-container d-none w-100 h-100">
-                        <img class="stories-preview-image d-none w-100 h-100 object-fit-contain" alt="Preview">
-                        <video class="stories-preview-video d-none w-100 h-100" controls></video>
+                    <div class="stories-editor__preview-container">
+                        <img class="stories-editor__preview-image" alt="Preview">
+                        <video class="stories-editor__preview-video" controls></video>
                     </div>
                 </div>
                 <!-- Правая часть: инструменты -->
-                <div class="stories-editor-toolbar d-flex flex-column align-items-end ms-4">
-                    <button type="button" class="stories-tool-btn stories-tool-text btn btn-light mb-2" data-action="add-text">
+                <div class="stories-editor__toolbar">
+                    <button type="button" class="stories-editor__tool-btn stories-editor__tool-text" data-action="add-text">
                         <i class="fa fa-font me-2"></i>Текст
                     </button>
-                    <button type="button" class="stories-tool-btn stories-tool-bg btn btn-light mb-2" data-action="set-bg">
+                    <button type="button" class="stories-editor__tool-btn stories-editor__tool-bg" data-action="set-bg">
                         <i class="fa fa-image me-2"></i>Фон
                     </button>
                 </div>
             </div>
-            <div class="modal-footer stories-modal-footer justify-content-end">
-                <button type="button" class="stories-publish-btn btn btn-primary" data-action="publish-story">
+            <div class="modal-footer stories-modal__footer">
+                <button type="button" class="stories-modal__publish-btn" data-action="publish-story">
                     Опубликовать
                 </button>
             </div>
