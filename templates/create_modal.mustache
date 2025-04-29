@@ -34,9 +34,19 @@
                     <button type="button" class="stories-editor__tool-btn stories-editor__tool-bg" data-action="set-bg">
                         <i class="fa fa-image me-2"></i>Фон
                     </button>
+                    <div class="stories-editor__bg-panel">
+                        <button type="button" class="stories-editor__bg-back">&larr;</button>
+                        <div class="stories-editor__bg-title">Фон</div>
+                        <div class="stories-editor__bg-label">Цвет</div>
+                        <div class="stories-editor__bg-palette"></div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer stories-modal__footer">
+                <div class="stories-editor__slides-panel" style="display:none;">
+                    <div class="stories-editor__slides-list"></div>
+                    <button type="button" class="stories-editor__slide-add">+</button>
+                </div>
                 <button type="button" class="stories-modal__publish-btn" data-action="publish-story">
                     Опубликовать
                 </button>
