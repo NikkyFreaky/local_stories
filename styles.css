@@ -193,7 +193,7 @@
 .stories-editor__bg-back {
   background: none;
   border: none;
-  color: #fff;
+  color: #000;
   font-size: 20px;
   margin-bottom: 8px;
   cursor: pointer;
@@ -202,4 +202,99 @@
 .stories-editor__bg-color {
   width: 40px;
   height: 40px;
+}
+
+.stories-confirm-modal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+}
+.stories-confirm-modal__overlay {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+.stories-confirm-modal__dialog {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: #232323;
+  color: #fff;
+  border-radius: 12px;
+  min-width: 320px;
+  padding: 32px 24px 24px 24px;
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.stories-confirm-modal__text {
+  margin-bottom: 24px;
+  font-size: 1.1em;
+  text-align: center;
+}
+.stories-confirm-modal__actions {
+  display: flex;
+  gap: 16px;
+}
+.stories-confirm-modal__btn {
+  min-width: 80px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1em;
+  cursor: pointer;
+  background: #444;
+  color: #fff;
+  transition: background 0.2s;
+}
+.stories-confirm-modal__btn--ok {
+  background: #007bff;
+}
+.stories-confirm-modal__btn--ok:hover {
+  background: #0056b3;
+}
+.stories-confirm-modal__btn--cancel:hover {
+  background: #666;
+}
+
+.stories-editor__slide-delete {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  color: #d00;
+  border: 1.5px solid #d00;
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+}
+.slide-btn-wrapper:hover .stories-editor__slide-delete {
+  opacity: 1;
+  pointer-events: auto;
+}
+.stories-editor__slide-delete:hover {
+  background: #d00;
+  color: #fff;
+}
+.slide-btn-wrapper {
+  position: relative;
+  display: inline-block;
 }
