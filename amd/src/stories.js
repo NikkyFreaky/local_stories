@@ -71,9 +71,83 @@ define(['jquery'], function ($) {
               background: 'transparent',
             })
             .text(block.text)
+            .prepend(
+              '<span class="stories-text-drag" title="Переместить">⠿</span>'
+            )
             .append(
               '<span class="stories-text-delete" title="Удалить">✕</span>'
             );
+
+          // Навешиваю обработчик удаления
+          $div.find('.stories-text-delete').on('click', function (e) {
+            // eslint-disable-next-line no-console
+            console.log('Клик по крестику удаления (direct)');
+            e.stopPropagation();
+            const id = $(this).closest('.stories-text-block').data('id');
+            const slide = slides[currentSlide];
+            if (!slide) {
+              return;
+            }
+            slide.texts = slide.texts.filter((t) => t.id !== id);
+            renderTextBlocks();
+            selectTextBlockWithPanel(null);
+          });
+
+          // Навешиваю обработчик двойного клика
+          $div.on('dblclick', function (e) {
+            if ($(e.target).hasClass('stories-text-delete')) {
+              return;
+            }
+            // eslint-disable-next-line no-console
+            console.log('Двойной клик по текстовому блоку (direct)');
+            const id = $(this).data('id');
+            const slide = slides[currentSlide];
+            if (!slide) {
+              return;
+            }
+            const block = slide.texts.find((t) => t.id === id);
+            if (!block) {
+              return;
+            }
+            if ($div.find('.stories-text-edit').length) {
+              return;
+            }
+            const width = $div.width();
+            const height = $div.height();
+            const $textarea = $(
+              '<textarea class="stories-text-edit"></textarea>'
+            )
+              .val(block.text)
+              .css({width: width, height: height});
+            $div.empty().append($textarea);
+            $textarea.focus().select();
+            /**
+             * Сохраняет изменения текста из textarea
+             */
+            function saveEdit() {
+              block.text = $textarea.val();
+              renderTextBlocks();
+              selectTextBlockWithPanel(block.id);
+            }
+            $textarea.on('blur', saveEdit);
+            $textarea.on('keydown', function (ev) {
+              if (ev.key === 'Enter' && (ev.ctrlKey || ev.shiftKey)) {
+                ev.preventDefault();
+                $textarea.blur();
+              }
+            });
+          });
+
+          // DEBUG: логируем все клики и двойные клики по блоку
+          $div.on('click', function (e) {
+            // eslint-disable-next-line no-console
+            console.log('CLICK по текстовому блоку', e.target);
+          });
+          $div.on('dblclick', function (e) {
+            // eslint-disable-next-line no-console
+            console.log('DBLCLICK по текстовому блоку', e.target);
+          });
+
           canvas.append($div);
         });
       }
@@ -756,32 +830,8 @@ define(['jquery'], function ($) {
         setTextPanelVisible(false);
       }
 
-      // --- Drag-n-drop с ограничением по canvas ---
+      // --- Drag-n-drop только по ручке ---
       let dragState = null;
-      canvas.on('mousedown', '.stories-text-block', function (e) {
-        if (e.button !== 0) {
-          return;
-        }
-        const id = $(this).data('id');
-        const slide = slides[currentSlide];
-        if (!slide) {
-          return;
-        }
-        const block = slide.texts.find((t) => t.id === id);
-        if (!block) {
-          return;
-        }
-        dragState = {
-          id,
-          startX: e.pageX,
-          startY: e.pageY,
-          origX: block.x,
-          origY: block.y,
-          $el: $(this),
-        };
-        $(document.body).addClass('stories-dragging');
-        e.preventDefault();
-      });
       $(document).on('mousemove', function (e) {
         if (!dragState) {
           return;
@@ -830,6 +880,8 @@ define(['jquery'], function ($) {
 
       // --- Удаление текстового блока ---
       $('#stories-modal').on('click', '.stories-text-delete', function (e) {
+        // eslint-disable-next-line no-console
+        console.log('Клик по крестику удаления');
         e.stopPropagation();
         const id = $(this).closest('.stories-text-block').data('id');
         const slide = slides[currentSlide];
@@ -844,6 +896,83 @@ define(['jquery'], function ($) {
       // Кнопка "Назад" для панели редактирования текста
       textPanel.on('click', '.stories-editor__text-back', function () {
         setTextPanelVisible(false);
+      });
+
+      // --- Редактирование текста по двойному клику ---
+      canvas.on('dblclick', function (e) {
+        const $block = $(e.target).closest('.stories-text-block');
+        if (!$block.length) {
+          return;
+        }
+        if ($(e.target).hasClass('stories-text-delete')) {
+          return;
+        }
+        // eslint-disable-next-line no-console
+        console.log('Двойной клик по текстовому блоку');
+        const id = $block.data('id');
+        const slide = slides[currentSlide];
+        if (!slide) {
+          return;
+        }
+        const block = slide.texts.find((t) => t.id === id);
+        if (!block) {
+          return;
+        }
+        // Уже редактируется — не вставлять второй раз
+        if ($block.find('.stories-text-edit').length) {
+          return;
+        }
+        // Сохраняем размеры
+        const width = $block.width();
+        const height = $block.height();
+        // Вставляем textarea
+        const $textarea = $('<textarea class="stories-text-edit"></textarea>')
+          .val(block.text)
+          .css({width: width, height: height});
+        $block.empty().append($textarea);
+        $textarea.focus().select();
+        /**
+         * Сохраняет изменения текста из textarea
+         */
+        function saveEdit() {
+          block.text = $textarea.val();
+          renderTextBlocks();
+          selectTextBlockWithPanel(block.id);
+        }
+        $textarea.on('blur', saveEdit);
+        $textarea.on('keydown', function (ev) {
+          if (ev.key === 'Enter' && (ev.ctrlKey || ev.shiftKey)) {
+            ev.preventDefault();
+            $textarea.blur();
+          }
+        });
+      });
+
+      // --- Drag-n-drop только по ручке ---
+      canvas.on('mousedown', '.stories-text-drag', function (e) {
+        if (e.button !== 0) {
+          return;
+        }
+        const $block = $(this).closest('.stories-text-block');
+        const id = $block.data('id');
+        const slide = slides[currentSlide];
+        if (!slide) {
+          return;
+        }
+        const block = slide.texts.find((t) => t.id === id);
+        if (!block) {
+          return;
+        }
+        dragState = {
+          id,
+          startX: e.pageX,
+          startY: e.pageY,
+          origX: block.x,
+          origY: block.y,
+          $el: $block,
+        };
+        $(document.body).addClass('stories-dragging');
+        e.preventDefault();
       });
     },
   };
