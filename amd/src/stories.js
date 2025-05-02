@@ -80,8 +80,6 @@ define(['jquery'], function ($) {
 
           // Навешиваю обработчик удаления
           $div.find('.stories-text-delete').on('click', function (e) {
-            // eslint-disable-next-line no-console
-            console.log('Клик по крестику удаления (direct)');
             e.stopPropagation();
             const id = $(this).closest('.stories-text-block').data('id');
             const slide = slides[currentSlide];
@@ -98,8 +96,6 @@ define(['jquery'], function ($) {
             if ($(e.target).hasClass('stories-text-delete')) {
               return;
             }
-            // eslint-disable-next-line no-console
-            console.log('Двойной клик по текстовому блоку (direct)');
             const id = $(this).data('id');
             const slide = slides[currentSlide];
             if (!slide) {
@@ -136,16 +132,6 @@ define(['jquery'], function ($) {
                 $textarea.blur();
               }
             });
-          });
-
-          // DEBUG: логируем все клики и двойные клики по блоку
-          $div.on('click', function (e) {
-            // eslint-disable-next-line no-console
-            console.log('CLICK по текстовому блоку', e.target);
-          });
-          $div.on('dblclick', function (e) {
-            // eslint-disable-next-line no-console
-            console.log('DBLCLICK по текстовому блоку', e.target);
           });
 
           canvas.append($div);
@@ -651,7 +637,11 @@ define(['jquery'], function ($) {
             .addClass('selected');
           setTextPanelVisible(true);
         } else {
-          setTextPanelVisible(false);
+          const slide = slides[currentSlide];
+          if (!slide || !slide.texts || slide.texts.length === 0) {
+            setTextPanelVisible(false);
+          }
+          // если есть хотя бы один блок — панель не скрываем
         }
       }
       /**
@@ -806,7 +796,16 @@ define(['jquery'], function ($) {
       });
       // Клик по кнопке тулбара
       toolTextBtn.on('click', function () {
-        addTextBlock();
+        const slide = slides[currentSlide];
+        if (!slide) {
+          return;
+        }
+        if (slide.texts && slide.texts.length > 0) {
+          renderTextBlocks();
+          selectTextBlockWithPanel(slide.texts[0].id);
+        } else {
+          addTextBlock();
+        }
       });
 
       // Клик по текстовому блоку — выделение
@@ -818,6 +817,11 @@ define(['jquery'], function ($) {
       // Клик вне блока — снять выделение
       canvas.on('click', function (e) {
         if (!$(e.target).closest('.stories-text-block').length) {
+          const slide = slides[currentSlide];
+          if (!slide || !slide.texts || slide.texts.length === 0) {
+            setTextPanelVisible(false);
+          }
+          // Если есть хотя бы один блок — панель не скрываем
           selectTextBlockWithPanel(null);
         }
       });
@@ -879,10 +883,7 @@ define(['jquery'], function ($) {
       });
 
       // --- Удаление текстового блока ---
-      $('#stories-modal').on('click', '.stories-text-delete', function (e) {
-        // eslint-disable-next-line no-console
-        console.log('Клик по крестику удаления');
-        e.stopPropagation();
+      $('#stories-modal').on('click', '.stories-text-delete', function () {
         const id = $(this).closest('.stories-text-block').data('id');
         const slide = slides[currentSlide];
         if (!slide) {
@@ -907,8 +908,6 @@ define(['jquery'], function ($) {
         if ($(e.target).hasClass('stories-text-delete')) {
           return;
         }
-        // eslint-disable-next-line no-console
-        console.log('Двойной клик по текстовому блоку');
         const id = $block.data('id');
         const slide = slides[currentSlide];
         if (!slide) {
