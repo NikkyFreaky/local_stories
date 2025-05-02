@@ -15,6 +15,70 @@ define(['jquery'], function ($) {
       let currentSlide = 0;
 
       /**
+       * Создаёт дефолтный текстовый блок
+       * @returns {Object}
+       * Используется при добавлении нового текстового блока (см. реализацию ниже)
+       */
+      function createDefaultTextBlock() {
+        return {
+          id: 'text_' + Math.random().toString(36).substr(2, 9),
+          text: 'Текст',
+          x: 120,
+          y: 120,
+          color: '#000',
+          size: 32,
+          align: 'center',
+        };
+      }
+
+      /**
+       * Мигрирует старые слайды, добавляя поле texts если его нет
+       */
+      function migrateSlides() {
+        slides.forEach((slide) => {
+          if (!slide.texts) {
+            slide.texts = [];
+          }
+        });
+      }
+
+      /**
+       * Рендерит текстовые блоки на canvas
+       */
+      function renderTextBlocks() {
+        const canvas = $('#stories-modal').find('.stories-editor__canvas');
+        canvas.find('.stories-text-block').remove();
+        const slide = slides[currentSlide];
+        if (!slide || !slide.texts) {
+          return;
+        }
+        slide.texts.forEach((block) => {
+          const $div = $('<div class="stories-text-block"></div>')
+            .attr('data-id', block.id)
+            .css({
+              position: 'absolute',
+              left: block.x + 'px',
+              top: block.y + 'px',
+              color: block.color,
+              fontSize: block.size + 'px',
+              textAlign: block.align,
+              cursor: 'pointer',
+              userSelect: 'none',
+              zIndex: 10,
+              minWidth: '40px',
+              minHeight: '32px',
+              padding: '2px 8px',
+              background: 'transparent',
+            })
+            .text(block.text)
+            .append(
+              '<span class="stories-text-delete" title="Удалить">✕</span>'
+            );
+          canvas.append($div);
+        });
+      }
+
+      /**
        * Обновляет панель слайдов
        */
       function updateSlidesPanel() {
@@ -39,7 +103,7 @@ define(['jquery'], function ($) {
           btn.on('click', function () {
             saveCurrentSlideState();
             currentSlide = idx;
-            restoreSlideState();
+            restoreSlideStateWithUI();
             updateSlidesPanel();
           });
           list.append(wrapper);
@@ -67,6 +131,7 @@ define(['jquery'], function ($) {
             : videoPreview.is(':visible')
             ? 'video'
             : null,
+          texts: slides[currentSlide].texts || [],
         };
       }
 
@@ -75,6 +140,7 @@ define(['jquery'], function ($) {
        */
       function restoreSlideState() {
         resetPreview();
+        migrateSlides();
         const slide = slides[currentSlide];
         if (slide.bg) {
           canvas.css('background', slide.bg);
@@ -91,6 +157,7 @@ define(['jquery'], function ($) {
           dropzone.hide();
           canvas.addClass('stories-editor__canvas--has-content');
         }
+        renderTextBlocks();
       }
 
       /**
@@ -107,9 +174,9 @@ define(['jquery'], function ($) {
         .on('click', function () {
           if (!slides.length || hasContent(slides[currentSlide])) {
             saveCurrentSlideState();
-            slides.push({bg: null, media: null, mediaType: null});
+            slides.push({bg: null, media: null, mediaType: null, texts: []});
             currentSlide = slides.length - 1;
-            restoreSlideState();
+            restoreSlideStateWithUI();
             updateSlidesPanel();
             // Скрыть палитру фона
             modal
@@ -187,6 +254,8 @@ define(['jquery'], function ($) {
               function () {
                 slides = [];
                 currentSlide = 0;
+                renderTextBlocks();
+                setTextPanelVisible(false);
                 resetPreview();
                 updateSlidesPanel();
                 if (
@@ -210,6 +279,8 @@ define(['jquery'], function ($) {
           } else {
             slides = [];
             currentSlide = 0;
+            renderTextBlocks();
+            setTextPanelVisible(false);
             resetPreview();
             updateSlidesPanel();
             if (
@@ -245,12 +316,12 @@ define(['jquery'], function ($) {
       modal
         .find('.stories-editor__tool-bg[data-action="set-bg"]')
         .on('click', function () {
-          // Если нет слайдов — создать первый
+          const toolbar = $('#stories-modal').find('.stories-editor__toolbar');
+          toolbar.removeClass('stories-editor__toolbar--text-open');
           if (slides.length === 0) {
-            slides.push({bg: '#fff', media: null, mediaType: null});
+            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
             currentSlide = 0;
           } else if (!hasContent(slides[currentSlide])) {
-            // Если текущий слайд пустой — применить фон к нему
             slides[currentSlide].bg = '#fff';
             slides[currentSlide].media = null;
             slides[currentSlide].mediaType = null;
@@ -258,9 +329,8 @@ define(['jquery'], function ($) {
             // Если на текущем слайде уже есть фон — просто открыть палитру для изменения
             // ничего не меняем в slides/currentSlide
           } else {
-            // Если есть контент (фото/видео) — создать новый слайд
             saveCurrentSlideState();
-            slides.push({bg: '#fff', media: null, mediaType: null});
+            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
             currentSlide = slides.length - 1;
           }
           canvas.css('background', slides[currentSlide].bg || '#fff');
@@ -276,6 +346,7 @@ define(['jquery'], function ($) {
             .addClass('stories-editor__toolbar--bg-open');
           renderBgPalette();
           updateSlidesPanel();
+          updateTextBtnState();
         });
       modal.on('click', '.stories-editor__bg-color', function () {
         const color = $(this).data('bg-color');
@@ -289,7 +360,7 @@ define(['jquery'], function ($) {
         modal.find('.stories-editor__bg-color').removeClass('active');
         $(this).addClass('active');
         if (slides.length === 0) {
-          slides.push({bg: color, media: null, mediaType: null});
+          slides.push({bg: color, media: null, mediaType: null, texts: []});
           currentSlide = 0;
         } else {
           saveCurrentSlideState();
@@ -298,6 +369,7 @@ define(['jquery'], function ($) {
           slides[currentSlide].mediaType = null;
         }
         updateSlidesPanel();
+        updateTextBtnState();
       });
       modal.on('click', '.stories-editor__bg-back', function () {
         modal
@@ -327,6 +399,7 @@ define(['jquery'], function ($) {
             bg: null,
             media: file,
             mediaType: file.type.startsWith('image/') ? 'image' : 'video',
+            texts: [],
           });
           currentSlide = 0;
         } else {
@@ -338,6 +411,7 @@ define(['jquery'], function ($) {
             : 'video';
         }
         updateSlidesPanel();
+        updateTextBtnState();
       }
 
       // --- Dropzone/preview ---
@@ -396,6 +470,8 @@ define(['jquery'], function ($) {
                 function () {
                   slides = [];
                   currentSlide = 0;
+                  renderTextBlocks();
+                  setTextPanelVisible(false);
                   resetPreview();
                   updateSlidesPanel();
                   if (
@@ -416,6 +492,8 @@ define(['jquery'], function ($) {
             } else {
               slides = [];
               currentSlide = 0;
+              renderTextBlocks();
+              setTextPanelVisible(false);
               resetPreview();
               updateSlidesPanel();
               if (
@@ -456,7 +534,7 @@ define(['jquery'], function ($) {
               if (currentSlide >= slides.length) {
                 currentSlide = slides.length - 1;
               }
-              restoreSlideState();
+              restoreSlideStateWithUI();
               updateSlidesPanel();
               if (slides.length === 0) {
                 panel.hide();
@@ -465,6 +543,308 @@ define(['jquery'], function ($) {
             return false;
           }
         );
+
+      // --- Текстовые блоки ---
+      const textPanel = modal.find('.stories-editor__text-panel');
+      const addTextBtn = textPanel.find('.stories-editor__text-add');
+      const toolTextBtn = modal.find('.stories-editor__tool-text');
+
+      /**
+       * Управляет видимостью панели редактирования текста через класс тулбара
+       * @param {boolean} visible
+       */
+      function setTextPanelVisible(visible) {
+        const toolbar = $('#stories-modal').find('.stories-editor__toolbar');
+        if (visible) {
+          toolbar.addClass('stories-editor__toolbar--text-open');
+          toolbar.removeClass('stories-editor__toolbar--bg-open');
+        } else {
+          toolbar.removeClass('stories-editor__toolbar--text-open');
+          // Сброс выделения
+          canvas.find('.stories-text-block').removeClass('selected');
+        }
+      }
+
+      /**
+       * Выделяет текстовый блок по id и управляет панелью
+       * @param {string|null} id
+       */
+      function selectTextBlock(id) {
+        canvas.find('.stories-text-block').removeClass('selected');
+        if (id) {
+          canvas
+            .find('.stories-text-block[data-id="' + id + '"]')
+            .addClass('selected');
+          setTextPanelVisible(true);
+        } else {
+          setTextPanelVisible(false);
+        }
+      }
+      /**
+       * Выделяет текстовый блок и синхронизирует панель
+       * @param {string|null} id
+       */
+      function selectTextBlockWithPanel(id) {
+        selectTextBlock(id);
+        if (id) {
+          syncPanelWithBlock();
+        }
+      }
+
+      // --- Обработчики панели ---
+      /**
+       * Обработка выбора размера
+       */
+      textPanel.on('change', '.stories-editor__text-size', function () {
+        applyPanelToBlock();
+      });
+      /**
+       * Обработка выбора цвета
+       */
+      textPanel.on('click', '.stories-editor__text-colors button', function () {
+        textPanel
+          .find('.stories-editor__text-colors button')
+          .removeClass('active');
+        $(this).addClass('active');
+        applyPanelToBlock();
+      });
+      /**
+       * Обработка выбора выравнивания
+       */
+      textPanel.on('click', '.stories-editor__text-align button', function () {
+        textPanel
+          .find('.stories-editor__text-align button')
+          .removeClass('active');
+        $(this).addClass('active');
+        applyPanelToBlock();
+      });
+
+      /**
+       * Синхронизирует значения панели с выделенным блоком
+       */
+      function syncPanelWithBlock() {
+        const slide = slides[currentSlide];
+        const id = canvas.find('.stories-text-block.selected').data('id');
+        if (!id) {
+          return;
+        }
+        const block = slide.texts.find((t) => t.id === id);
+        if (!block) {
+          return;
+        }
+        textPanel.find('.stories-editor__text-size').val(block.size);
+        textPanel
+          .find('.stories-editor__text-colors button')
+          .removeClass('active');
+        textPanel
+          .find(
+            '.stories-editor__text-colors button[data-color="' +
+              block.color +
+              '"]'
+          )
+          .addClass('active');
+        textPanel
+          .find('.stories-editor__text-align button')
+          .removeClass('active');
+        textPanel
+          .find(
+            '.stories-editor__text-align button[data-align="' +
+              block.align +
+              '"]'
+          )
+          .addClass('active');
+      }
+
+      /**
+       * Применяет изменения из панели к выделенному блоку
+       */
+      function applyPanelToBlock() {
+        const slide = slides[currentSlide];
+        const id = canvas.find('.stories-text-block.selected').data('id');
+        if (!id) {
+          return;
+        }
+        const block = slide.texts.find((t) => t.id === id);
+        if (!block) {
+          return;
+        }
+        block.size = parseInt(
+          textPanel.find('.stories-editor__text-size').val(),
+          10
+        );
+        const colorBtn = textPanel.find(
+          '.stories-editor__text-colors button.active'
+        );
+        if (colorBtn.length) {
+          block.color = colorBtn.data('color');
+        }
+        const alignBtn = textPanel.find(
+          '.stories-editor__text-align button.active'
+        );
+        if (alignBtn.length) {
+          block.align = alignBtn.data('align');
+        }
+        renderTextBlocks();
+        selectTextBlockWithPanel(block.id);
+      }
+
+      /**
+       * Проверяет, можно ли добавлять текст на слайд
+       * @returns {boolean}
+       */
+      function canAddText() {
+        const slide = slides[currentSlide];
+        if (!slide) {
+          return false;
+        }
+        if (slide.mediaType === 'video') {
+          return false;
+        }
+        return !!(slide.bg || slide.mediaType === 'image');
+      }
+
+      /**
+       * Деактивирует кнопки добавления текста, если нельзя
+       */
+      function updateTextBtnState() {
+        const disabled = !canAddText();
+        toolTextBtn.prop('disabled', disabled);
+        addTextBtn.prop('disabled', disabled);
+      }
+
+      /**
+       * Добавляет новый текстовый блок на слайд
+       */
+      function addTextBlock() {
+        if (!canAddText()) {
+          return;
+        }
+        const slide = slides[currentSlide];
+        const block = createDefaultTextBlock();
+        slide.texts.push(block);
+        renderTextBlocks();
+        selectTextBlockWithPanel(block.id);
+      }
+
+      // Клик по кнопке панели
+      addTextBtn.on('click', function () {
+        addTextBlock();
+      });
+      // Клик по кнопке тулбара
+      toolTextBtn.on('click', function () {
+        addTextBlock();
+      });
+
+      // Клик по текстовому блоку — выделение
+      canvas.on('click', '.stories-text-block', function (e) {
+        e.stopPropagation();
+        const id = $(this).data('id');
+        selectTextBlockWithPanel(id);
+      });
+      // Клик вне блока — снять выделение
+      canvas.on('click', function (e) {
+        if (!$(e.target).closest('.stories-text-block').length) {
+          selectTextBlockWithPanel(null);
+        }
+      });
+      /**
+       * Обновляет UI после смены слайда: состояние кнопок и панели редактирования.
+       */
+      function restoreSlideStateWithUI() {
+        restoreSlideState();
+        updateTextBtnState();
+        setTextPanelVisible(false);
+      }
+
+      // --- Drag-n-drop с ограничением по canvas ---
+      let dragState = null;
+      canvas.on('mousedown', '.stories-text-block', function (e) {
+        if (e.button !== 0) {
+          return;
+        }
+        const id = $(this).data('id');
+        const slide = slides[currentSlide];
+        if (!slide) {
+          return;
+        }
+        const block = slide.texts.find((t) => t.id === id);
+        if (!block) {
+          return;
+        }
+        dragState = {
+          id,
+          startX: e.pageX,
+          startY: e.pageY,
+          origX: block.x,
+          origY: block.y,
+          $el: $(this),
+        };
+        $(document.body).addClass('stories-dragging');
+        e.preventDefault();
+      });
+      $(document).on('mousemove', function (e) {
+        if (!dragState) {
+          return;
+        }
+        const canvasW = canvas.innerWidth();
+        const canvasH = canvas.innerHeight();
+        const blockW = dragState.$el.outerWidth();
+        const blockH = dragState.$el.outerHeight();
+        let dx = e.pageX - dragState.startX;
+        let dy = e.pageY - dragState.startY;
+        let newX = dragState.origX + dx;
+        let newY = dragState.origY + dy;
+        // Ограничения с учётом padding/border
+        newX = Math.max(0, Math.min(newX, canvasW - blockW));
+        newY = Math.max(0, Math.min(newY, canvasH - blockH));
+        dragState.$el.css({left: newX + 'px', top: newY + 'px'});
+      });
+      $(document).on('mouseup', function (e) {
+        if (dragState) {
+          const slide = slides[currentSlide];
+          if (!slide) {
+            dragState = null;
+            return;
+          }
+          const block = slide.texts.find((t) => t.id === dragState.id);
+          if (block) {
+            const canvasW = canvas.innerWidth();
+            const canvasH = canvas.innerHeight();
+            const blockW = dragState.$el.outerWidth();
+            const blockH = dragState.$el.outerHeight();
+            let dx = e.pageX - dragState.startX;
+            let dy = e.pageY - dragState.startY;
+            let newX = dragState.origX + dx;
+            let newY = dragState.origY + dy;
+            newX = Math.max(0, Math.min(newX, canvasW - blockW));
+            newY = Math.max(0, Math.min(newY, canvasH - blockH));
+            block.x = newX;
+            block.y = newY;
+          }
+          dragState = null;
+          $(document.body).removeClass('stories-dragging');
+          renderTextBlocks();
+          selectTextBlockWithPanel(block ? block.id : null);
+        }
+      });
+
+      // --- Удаление текстового блока ---
+      $('#stories-modal').on('click', '.stories-text-delete', function (e) {
+        e.stopPropagation();
+        const id = $(this).closest('.stories-text-block').data('id');
+        const slide = slides[currentSlide];
+        if (!slide) {
+          return;
+        }
+        slide.texts = slide.texts.filter((t) => t.id !== id);
+        renderTextBlocks();
+        selectTextBlockWithPanel(null);
+      });
+
+      // Кнопка "Назад" для панели редактирования текста
+      textPanel.on('click', '.stories-editor__text-back', function () {
+        setTextPanelVisible(false);
+      });
     },
   };
 });

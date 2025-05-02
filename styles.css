@@ -298,3 +298,143 @@
   position: relative;
   display: inline-block;
 }
+
+.stories-editor__text-panel {
+  display: none;
+  flex-direction: column;
+  min-width: 220px;
+  background: #232323;
+  border-radius: 16px;
+  padding: 16px;
+  color: #fff;
+}
+.stories-editor__toolbar--text-open .stories-editor__text-panel {
+  display: flex;
+}
+.stories-text-block .stories-text-delete {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  color: #d00;
+  border: 1.5px solid #d00;
+  border-radius: 50%;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, background 0.2s, color 0.2s;
+}
+.stories-text-block.selected .stories-text-delete,
+.stories-text-block:hover .stories-text-delete {
+  opacity: 1;
+  pointer-events: auto;
+}
+.stories-text-block .stories-text-delete:hover {
+  background: #d00;
+  color: #fff;
+}
+
+.stories-editor__text-add {
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  margin-bottom: 12px;
+  font-size: 1em;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.stories-editor__text-add:hover {
+  background: #007bff;
+}
+.stories-editor__text-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.stories-editor__text-size {
+  margin-left: 8px;
+  border-radius: 6px;
+  border: 1px solid #888;
+  padding: 2px 8px;
+}
+.stories-editor__text-align button {
+  background: #444;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  margin-right: 4px;
+  font-size: 1.2em;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: background 0.2s;
+}
+.stories-editor__text-align button.active,
+.stories-editor__text-align button:hover {
+  background: #007bff;
+}
+.stories-editor__text-colors button {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  margin-right: 4px;
+  cursor: pointer;
+  outline: none;
+  transition: border 0.2s;
+}
+.stories-editor__text-colors button.active,
+.stories-editor__text-colors button:hover {
+  border: 2px solid #007bff;
+}
+.stories-editor__text-delete {
+  background: #d00;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1.2em;
+  align-self: flex-end;
+  margin-top: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.stories-editor__text-delete:hover {
+  background: #a00;
+}
+
+.stories-editor__text-back {
+  background: none;
+  border: none;
+  color: #fff;
+  font-size: 20px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.stories-text-block {
+  position: absolute;
+  border-radius: 8px;
+  /* background: transparent; */
+  /* box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); */
+  padding: 2px 8px;
+  min-width: 40px;
+  min-height: 32px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 10;
+  transition: box-shadow 0.2s, border 0.2s;
+}
+.stories-text-block.selected {
+  border: 2px solid #007bff;
+  /* box-shadow: 0 2px 8px rgba(0, 123, 255, 0.12); */
+}
