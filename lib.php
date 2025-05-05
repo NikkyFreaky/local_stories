@@ -29,15 +29,17 @@ defined('MOODLE_INTERNAL') || die();
  */
 function local_stories_render_navbar_output(\core_renderer $renderer) {
     global $PAGE;
-    // Подключаем JS для управления модальным окном
+    // Подключаем JS модули
     $PAGE->requires->js_call_amd('local_stories/modal', 'init');
     $PAGE->requires->js_call_amd('local_stories/stories', 'init');
+    $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
     // Только navbar, без модалки!
     return $renderer->render_from_template('local_stories/navbar', []);
 }
 
 function local_stories_before_footer() {
     global $OUTPUT;
-    // Только вывод модалки, без подключения CSS!
+    // Выводим модалки
     echo $OUTPUT->render_from_template('local_stories/create_modal', []);
+    echo $OUTPUT->render_from_template('local_stories/view_modal', []);
 } 

@@ -1,0 +1,43 @@
+<!-- Модальное окно просмотра историй -->
+<div id="stories-view-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="storiesViewModalLabel">
+    <div class="modal-dialog stories-view-modal__dialog" role="document">
+        <div class="modal-content stories-view-modal__content">
+            <!-- Прогресс-бар для слайдов -->
+            <div class="stories-view-modal__progress">
+                <div class="stories-view-modal__progress-items"></div>
+            </div>
+            
+            <!-- Основной контент -->
+            <div class="stories-view-modal__body">
+                <!-- Область просмотра -->
+                <div class="stories-view-modal__viewer">
+                    <div class="stories-view-modal__media-container">
+                        <img class="stories-view-modal__image" alt="">
+                        <video class="stories-view-modal__video" playsinline></video>
+                    </div>
+                    <!-- Тексты будут добавляться динамически -->
+                    <div class="stories-view-modal__texts"></div>
+                </div>
+
+                <!-- Кнопки навигации -->
+                <button type="button" class="stories-view-modal__nav stories-view-modal__nav--prev" data-action="prev-slide">
+                    <span aria-hidden="true">&lsaquo;</span>
+                </button>
+                <button type="button" class="stories-view-modal__nav stories-view-modal__nav--next" data-action="next-slide">
+                    <span aria-hidden="true">&rsaquo;</span>
+                </button>
+
+                <!-- Кнопки управления -->
+                <div class="stories-view-modal__controls">
+                    <button type="button" class="stories-view-modal__pause" data-action="toggle-pause">
+                        <span class="play-icon">▶</span>
+                        <span class="pause-icon">⏸</span>
+                    </button>
+                    <button type="button" class="stories-view-modal__close" data-action="close-modal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> 
