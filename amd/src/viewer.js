@@ -1,5 +1,7 @@
 /* eslint-disable linebreak-style */
 define(['jquery'], function ($) {
+  'use strict';
+
   // Тестовые данные для прототипа
   const MOCK_STORY = {
     id: 1,
@@ -43,6 +45,9 @@ define(['jquery'], function ($) {
 
   class StoriesViewer {
     constructor() {
+      if (typeof $ === 'undefined') {
+        throw new Error('jQuery is required for StoriesViewer');
+      }
       this.$modal = $('#stories-view-modal');
       this.$progressItems = this.$modal.find(
         '.stories-view-modal__progress-items'
@@ -269,6 +274,10 @@ define(['jquery'], function ($) {
 
   return {
     init: function () {
+      if (typeof $ === 'undefined') {
+        throw new Error('jQuery is required for StoriesViewer');
+      }
+
       const viewer = new StoriesViewer();
 
       // Добавляем глобальный метод для открытия просмотрщика

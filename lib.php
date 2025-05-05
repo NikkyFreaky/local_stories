@@ -29,10 +29,10 @@ defined('MOODLE_INTERNAL') || die();
  */
 function local_stories_render_navbar_output(\core_renderer $renderer) {
     global $PAGE;
-    // Подключаем JS модули
+    // Подключаем JS модули в правильном порядке
+    $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
     $PAGE->requires->js_call_amd('local_stories/modal', 'init');
     $PAGE->requires->js_call_amd('local_stories/stories', 'init');
-    $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
     // Только navbar, без модалки!
     return $renderer->render_from_template('local_stories/navbar', []);
 }
@@ -42,4 +42,50 @@ function local_stories_before_footer() {
     // Выводим модалки
     echo $OUTPUT->render_from_template('local_stories/create_modal', []);
     echo $OUTPUT->render_from_template('local_stories/view_modal', []);
+}
+
+/**
+ * Serves the files from the local_stories file areas
+ *
+ * @param stdClass $course the course object
+ * @param stdClass $cm the course module object
+ * @param stdClass $context the context
+ * @param string $filearea the name of the file area
+ * @param array $args extra arguments (itemid, path)
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if the file not found, just send the file otherwise
+ */
+function local_stories_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+    // Check the contextlevel is as expected
+    if ($context->contextlevel != CONTEXT_SYSTEM) {
+        return false;
+    }
+
+    // Make sure the filearea is one of those used by the plugin
+    if ($filearea !== 'content') {
+        return false;
+    }
+
+    // Make sure the user is logged in and has access to the module
+    require_login($course, true, $cm);
+
+    // Extract the filename / filepath from the $args array
+    $itemid = array_shift($args); // The first item in the $args array
+    $filename = array_pop($args); // The last item in the $args array
+    if (!$args) {
+        $filepath = '/';
+    } else {
+        $filepath = '/' . implode('/', $args) . '/';
+    }
+
+    // Retrieve the file from the Files API
+    $fs = get_file_storage();
+    $file = $fs->get_file($context->id, 'local_stories', $filearea, $itemid, $filepath, $filename);
+    if (!$file) {
+        return false; // The file does not exist
+    }
+
+    // Send the file back
+    send_stored_file($file, 86400, 0, $forcedownload, $options);
 } 

@@ -1,5 +1,84 @@
 /* eslint-disable linebreak-style */
-define(['jquery'], function ($) {
+define(['jquery', 'core/ajax', 'core/notification'], function (
+  $,
+  Ajax,
+  Notification
+) {
+  'use strict';
+
+  /**
+   * Сохраняет историю
+   * @param {Object} data Данные истории
+   * @returns {Promise}
+   */
+  function saveStory(data) {
+    return Ajax.call([
+      {
+        methodname: 'local_stories_create_story',
+        args: data,
+      },
+    ])[0]
+      .then(function (response) {
+        if (!response || typeof response.id === 'undefined') {
+          throw new Error('Invalid server response: story ID is missing');
+        }
+        return response;
+      })
+      .catch(Notification.exception);
+  }
+
+  /**
+   * Публикует историю
+   * @param {number} storyId ID истории
+   * @param {boolean} publish true для публикации, false для снятия с публикации
+   * @returns {Promise}
+   */
+  function publishStory(storyId, publish = true) {
+    return Ajax.call([
+      {
+        methodname: 'local_stories_publish_story',
+        args: {
+          story_id: storyId,
+          publish: publish,
+        },
+      },
+    ])[0].catch(Notification.exception);
+  }
+
+  /**
+   * Загружает файл на сервер
+   * @param {File} file Файл для загрузки
+   * @returns {Promise<string>} URL загруженного файла
+   */
+  function uploadFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = function () {
+        const base64data = reader.result.split(',')[1];
+
+        Ajax.call([
+          {
+            methodname: 'local_stories_upload_file',
+            args: {
+              filedata: base64data,
+              filename: file.name,
+              filetype: file.type,
+            },
+          },
+        ])[0]
+          .then(function (response) {
+            if (!response || !response.url) {
+              throw new Error('Failed to upload file');
+            }
+            resolve(response.url);
+          })
+          .catch(reject);
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   return {
     init: function () {
       // Инициализируем модальное окно
@@ -52,6 +131,10 @@ define(['jquery'], function ($) {
 
       // Инициализируем модальное окно с нашими настройками
       if (window.bootstrap && window.bootstrap.Modal) {
+        // Отключаем debug-панель для этого компонента
+        if (window.M && window.M.reactive) {
+          window.M.reactive.debug = false;
+        }
         window.StoriesModal = new window.bootstrap.Modal(modal[0], {
           backdrop: 'static',
           keyboard: false,
@@ -1026,9 +1109,112 @@ define(['jquery'], function ($) {
       // --- Публикация истории ---
       modal.find('[data-action="publish-story"]').on('click', function () {
         if (!slides.length || !slides.some(hasContent)) {
+          Notification.alert('Ошибка', 'Добавьте хотя бы один слайд');
           return;
         }
-        // TODO: Добавить логику публикации
+
+        // Загружаем все файлы перед сохранением
+        const uploads = slides
+          .filter((slide) => slide.media instanceof File)
+          .map((slide) =>
+            uploadFile(slide.media).then((url) => {
+              slide.mediaUrl = url;
+              delete slide.media;
+            })
+          );
+
+        Promise.all(uploads)
+          .then(() => {
+            const data = {
+              title: 'Story ' + Date.now(),
+              slides: slides.map((slide, index) => ({
+                position: index,
+                duration: slide.duration || 5000,
+                background: slide.bg,
+                media_type: slide.mediaType || null,
+                media_url: slide.mediaUrl || null,
+                texts: (slide.texts || []).map((text) => ({
+                  text: text.text,
+                  x: text.x,
+                  y: text.y,
+                  color: text.color,
+                  size: text.size,
+                  align: text.align,
+                })),
+              })),
+            };
+
+            return saveStory(data);
+          })
+          .then(function (response) {
+            if (!response || !response.id) {
+              throw new Error('Failed to create story: invalid response');
+            }
+            // Сразу публикуем историю
+            return publishStory(response.id).then(function () {
+              // Закрываем модальное окно
+              closeModal();
+              // Показываем уведомление об успехе
+              Notification.addNotification({
+                message: 'История опубликована',
+                type: 'success',
+              });
+              // Перезагружаем страницу для обновления списка историй
+              window.location.reload();
+            });
+          })
+          .catch(function (error) {
+            Notification.exception(error);
+          });
+      });
+
+      // Обработчик сохранения истории
+      modal.find('[data-action="save-story"]').on('click', function () {
+        const title = modal.find('[name="title"]').val();
+        if (!title) {
+          Notification.alert('Ошибка', 'Введите название истории');
+          return;
+        }
+
+        const data = {
+          title: title,
+          course_id: modal.find('[name="course_id"]').val() || null,
+          expires_at: modal.find('[name="expires_at"]').val() || null,
+          slides: slides.map((slide, index) => ({
+            position: index,
+            duration: slide.duration || 5000,
+            background: slide.bg,
+            media_type: slide.mediaType,
+            media_url: slide.media,
+            texts: (slide.texts || []).map((text) => ({
+              text: text.text,
+              x: text.x,
+              y: text.y,
+              color: text.color,
+              size: text.size,
+              align: text.align,
+            })),
+          })),
+        };
+
+        saveStory(data)
+          .then(function (response) {
+            // Закрываем модальное окно
+            closeModal();
+            // Показываем уведомление об успехе
+            Notification.addNotification({
+              message: 'История успешно создана',
+              type: 'success',
+            });
+            // Если нужно опубликовать сразу
+            if (modal.find('[name="publish"]').prop('checked')) {
+              return publishStory(response.id);
+            }
+          })
+          .then(function () {
+            // Перезагружаем страницу для обновления списка историй
+            window.location.reload();
+          });
       });
     },
   };
