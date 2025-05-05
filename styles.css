@@ -16,6 +16,11 @@
   border: 1px solid #000;
   border-radius: 50%;
 
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   .icon {
     margin: 0;
   }
@@ -26,7 +31,9 @@
 }
 
 #stories-modal {
-  &.modal.show {
+  display: none;
+
+  &.show {
     display: flex !important;
     align-items: center;
     justify-content: center;
@@ -476,4 +483,8 @@
   box-sizing: border-box;
   outline: none;
   z-index: 20;
+}
+
+.modal-backdrop {
+  opacity: 0.5;
 }

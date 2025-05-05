@@ -2,7 +2,85 @@
 define(['jquery'], function ($) {
   return {
     init: function () {
+      // Инициализируем модальное окно
       const modal = $('#stories-modal');
+
+      /**
+       * Закрывает модальное окно и очищает состояние
+       */
+      function closeModal() {
+        slides = [];
+        currentSlide = 0;
+        renderTextBlocks();
+        setTextPanelVisible(false);
+        resetPreview();
+        updateSlidesPanel();
+        if (
+          window.StoriesModal &&
+          typeof window.StoriesModal.hide === 'function'
+        ) {
+          window.StoriesModal.hide();
+        } else {
+          modal.removeClass('show').css('display', '').removeAttr('aria-modal');
+          $('.modal-backdrop').remove();
+          $('body').removeClass('modal-open');
+        }
+      }
+
+      /**
+       * Пытается закрыть модальное окно с подтверждением при необходимости
+       * @param {Event} [e] - Событие, вызвавшее закрытие
+       */
+      function tryCloseModal(e) {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        if (slides.some(hasContent)) {
+          if (!confirmOpen) {
+            showConfirmModal(
+              'Вы действительно хотите закрыть окно? Весь добавленный контент будет удалён.',
+              closeModal
+            );
+          }
+          return false;
+        } else {
+          closeModal();
+        }
+      }
+
+      // Инициализируем модальное окно с нашими настройками
+      if (window.bootstrap && window.bootstrap.Modal) {
+        window.StoriesModal = new window.bootstrap.Modal(modal[0], {
+          backdrop: 'static',
+          keyboard: false,
+        });
+      }
+
+      // Обработчик для кнопки закрытия
+      modal.find('[data-action="close-modal"]').on('click', tryCloseModal);
+
+      // Обработчик для клика по backdrop
+      modal.on('hide.bs.modal', function (e) {
+        if (!confirmOpen) {
+          e.preventDefault();
+          tryCloseModal(e);
+        }
+      });
+
+      // Обработчик для клавиши Esc
+      $(document).on('keydown.stories-modal', function (e) {
+        if (e.key === 'Escape' && modal.hasClass('show')) {
+          tryCloseModal(e);
+        }
+      });
+
+      // Предотвращаем автозаполнение
+      modal.on('show.bs.modal', function () {
+        $(this).find('input, select').attr('autocomplete', 'off');
+      });
+
       const fileInput = modal.find('.stories-editor__file-input');
       const dropzone = modal.find('.stories-editor__dropzone');
       const canvas = modal.find('.stories-editor__canvas');
@@ -10,9 +88,270 @@ define(['jquery'], function ($) {
       const videoPreview = modal.find('.stories-editor__preview-video');
       const previewContainer = modal.find('.stories-editor__preview-container');
 
+      /**
+       * Показывает предпросмотр для выбранного файла
+       * @param {File} file - Файл для предпросмотра
+       */
+      function showPreview(file) {
+        resetPreview();
+        if (file.type.startsWith('image/')) {
+          imgPreview.attr('src', URL.createObjectURL(file)).show();
+        } else if (file.type.startsWith('video/')) {
+          videoPreview.attr('src', URL.createObjectURL(file)).show();
+        }
+        previewContainer.show();
+        dropzone.hide();
+        canvas.addClass('stories-editor__canvas--has-content');
+        canvas.css('background', '');
+        canvas.removeClass('stories-editor__canvas--has-bg');
+        modal.find('.stories-editor__bg-color').removeClass('active');
+        if (slides.length === 0) {
+          slides.push({
+            bg: null,
+            media: file,
+            mediaType: file.type.startsWith('image/') ? 'image' : 'video',
+            texts: [],
+          });
+          currentSlide = 0;
+        } else {
+          saveCurrentSlideState();
+          slides[currentSlide].bg = null;
+          slides[currentSlide].media = file;
+          slides[currentSlide].mediaType = file.type.startsWith('image/')
+            ? 'image'
+            : 'video';
+        }
+        updateSlidesPanel();
+        updateTextBtnState();
+        updateAddBtnState();
+        updateBgBtnState();
+      }
+
+      // --- Dropzone/preview ---
+      fileInput.on('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+          showPreview(file);
+        }
+      });
+
+      dropzone.on('dragenter dragover', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.addClass('stories-editor__dropzone--dragover');
+      });
+
+      dropzone.on('dragleave dragend drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.removeClass('stories-editor__dropzone--dragover');
+      });
+
+      dropzone.on('drop', function (e) {
+        const file = e.originalEvent.dataTransfer.files[0];
+        if (file) {
+          showPreview(file);
+        }
+      });
+
+      // --- Выбор фона ---
+      const bgColors = ['#fff', '#ff0000', '#000', '#ff9900', '#00ff00'];
+
+      /**
+       * Генерирует палитру цветов для выбора фона
+       */
+      function renderBgPalette() {
+        const palette = modal.find('.stories-editor__bg-palette');
+        palette.empty();
+        bgColors.forEach((color) => {
+          palette.append(
+            `<button class="stories-editor__bg-color" data-bg-color="${color}" style="background:${color}"></button>`
+          );
+        });
+      }
+
+      /**
+       * Проверяет, можно ли установить фон для текущего слайда
+       * @returns {boolean}
+       */
+      function canSetBackground() {
+        if (slides.length === 0) {
+          return true;
+        }
+        const currentSlideData = slides[currentSlide];
+        return !currentSlideData || !currentSlideData.media;
+      }
+
+      /**
+       * Обновляет состояние кнопки установки фона
+       */
+      function updateBgBtnState() {
+        const bgBtn = modal.find(
+          '.stories-editor__tool-bg[data-action="set-bg"]'
+        );
+        if (canSetBackground()) {
+          bgBtn.prop('disabled', false).removeClass('disabled');
+        } else {
+          bgBtn.prop('disabled', true).addClass('disabled');
+        }
+      }
+
+      modal
+        .find('.stories-editor__tool-bg[data-action="set-bg"]')
+        .on('click', function () {
+          if (!canSetBackground()) {
+            return;
+          }
+          const toolbar = $('#stories-modal').find('.stories-editor__toolbar');
+          toolbar.removeClass('stories-editor__toolbar--text-open');
+          if (slides.length === 0) {
+            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
+            currentSlide = 0;
+          } else if (!hasContent(slides[currentSlide])) {
+            slides[currentSlide].bg = '#fff';
+            slides[currentSlide].media = null;
+            slides[currentSlide].mediaType = null;
+          } else if (slides[currentSlide].bg) {
+            // Если на текущем слайде уже есть фон — просто открыть палитру для изменения
+            // ничего не меняем в slides/currentSlide
+          } else {
+            saveCurrentSlideState();
+            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
+            currentSlide = slides.length - 1;
+          }
+          canvas.css('background', slides[currentSlide].bg || '#fff');
+          canvas.addClass('stories-editor__canvas--has-bg');
+          dropzone.hide();
+          imgPreview.hide();
+          videoPreview.hide();
+          previewContainer.hide();
+          canvas.removeClass('stories-editor__canvas--has-content');
+          modal.find('.stories-editor__bg-color').removeClass('active');
+          modal
+            .find('.stories-editor__toolbar')
+            .addClass('stories-editor__toolbar--bg-open');
+          renderBgPalette();
+          updateSlidesPanel();
+          updateTextBtnState();
+        });
+
+      modal.on('click', '.stories-editor__bg-color', function () {
+        const color = $(this).data('bg-color');
+        canvas.css('background', color);
+        canvas.addClass('stories-editor__canvas--has-bg');
+        dropzone.hide();
+        imgPreview.hide();
+        videoPreview.hide();
+        previewContainer.hide();
+        canvas.removeClass('stories-editor__canvas--has-content');
+        modal.find('.stories-editor__bg-color').removeClass('active');
+        $(this).addClass('active');
+        if (slides.length === 0) {
+          slides.push({bg: color, media: null, mediaType: null, texts: []});
+          currentSlide = 0;
+        } else {
+          saveCurrentSlideState();
+          slides[currentSlide].bg = color;
+          slides[currentSlide].media = null;
+          slides[currentSlide].mediaType = null;
+        }
+        updateSlidesPanel();
+        updateTextBtnState();
+      });
+
+      modal.on('click', '.stories-editor__bg-back', function () {
+        modal
+          .find('.stories-editor__toolbar')
+          .removeClass('stories-editor__toolbar--bg-open');
+      });
+
       // --- Слайды ---
       let slides = [];
       let currentSlide = 0;
+
+      /**
+       * Проверяет, есть ли контент на слайде
+       * @param {Object} slide - Слайд для проверки
+       * @returns {boolean}
+       */
+      function hasContent(slide) {
+        if (!slide) {
+          return false;
+        }
+        return !!(slide.bg || slide.media);
+      }
+
+      /**
+       * Обновляет состояние кнопки добавления слайда
+       */
+      function updateAddBtnState() {
+        const addBtn = modal.find('.stories-editor__slide-add');
+        if (!slides.length || hasContent(slides[currentSlide])) {
+          addBtn.prop('disabled', false);
+        } else {
+          addBtn.prop('disabled', true);
+        }
+      }
+
+      modal
+        .find('.stories-editor__slide-add')
+        .off('click')
+        .on('click', function () {
+          if (!slides.length || hasContent(slides[currentSlide])) {
+            saveCurrentSlideState();
+            slides.push({bg: null, media: null, mediaType: null, texts: []});
+            currentSlide = slides.length - 1;
+            restoreSlideStateWithUI();
+            updateSlidesPanel();
+            // Скрыть палитру фона
+            modal
+              .find('.stories-editor__toolbar')
+              .removeClass('stories-editor__toolbar--bg-open');
+          }
+        });
+
+      /**
+       * Сбрасывает предпросмотр и состояние canvas
+       */
+      function resetPreview() {
+        imgPreview.attr('src', '').hide();
+        videoPreview.attr('src', '').hide();
+        previewContainer.hide();
+        dropzone.show();
+        canvas.removeClass('stories-editor__canvas--has-content');
+        canvas.removeClass('stories-editor__canvas--has-bg');
+        canvas.css('background', '');
+        modal.find('.stories-editor__bg-color').removeClass('active');
+        modal
+          .find('.stories-editor__toolbar')
+          .removeClass('stories-editor__toolbar--bg-open');
+        updateBgBtnState();
+      }
+
+      // Устанавливаем callback для подтверждения закрытия
+      if (
+        window.StoriesModal &&
+        typeof window.StoriesModal.setConfirmCallback === 'function'
+      ) {
+        window.StoriesModal.setConfirmCallback(function () {
+          return slides.some(hasContent);
+        });
+      }
+
+      // Устанавливаем callback для очистки при закрытии
+      if (
+        window.StoriesModal &&
+        typeof window.StoriesModal.setCleanupCallback === 'function'
+      ) {
+        window.StoriesModal.setCleanupCallback(function () {
+          slides = [];
+          currentSlide = 0;
+          renderTextBlocks();
+          setTextPanelVisible(false);
+          resetPreview();
+          updateSlidesPanel();
+        });
+      }
 
       /**
        * Создаёт дефолтный текстовый блок
@@ -161,7 +500,24 @@ define(['jquery'], function ($) {
           const wrapper = $('<span class="slide-btn-wrapper"></span>');
           wrapper.append(btn).append(delBtn);
           btn.on('click', function () {
-            saveCurrentSlideState();
+            // Проверяем текущий слайд перед переключением
+            if (currentSlide >= 0 && currentSlide < slides.length) {
+              const currentSlideObj = slides[currentSlide];
+              if (!hasContent(currentSlideObj)) {
+                // Если текущий слайд пустой - удаляем его
+                slides.splice(currentSlide, 1);
+                // Корректируем индекс, если удаляемый слайд был перед целевым
+                if (currentSlide < idx) {
+                  idx--;
+                }
+                // Если удаляем последний слайд
+                if (idx >= slides.length) {
+                  idx = slides.length - 1;
+                }
+              } else {
+                saveCurrentSlideState();
+              }
+            }
             currentSlide = idx;
             restoreSlideStateWithUI();
             updateSlidesPanel();
@@ -170,13 +526,18 @@ define(['jquery'], function ($) {
         });
         panel.show();
         updateAddBtnState();
+        updateBgBtnState();
       }
 
       /**
        * Сохраняет состояние текущего слайда
        */
       function saveCurrentSlideState() {
-        if (slides.length === 0) {
+        if (
+          slides.length === 0 ||
+          currentSlide < 0 ||
+          currentSlide >= slides.length
+        ) {
           return;
         }
         slides[currentSlide] = {
@@ -221,39 +582,13 @@ define(['jquery'], function ($) {
       }
 
       /**
-       * Проверяет, есть ли контент на слайде
-       * @param {Object} slide
-       * @returns {boolean}
+       * Обновляет UI после смены слайда: состояние кнопок и панели редактирования.
        */
-      function hasContent(slide) {
-        return !!(slide.bg || slide.media);
-      }
-      modal
-        .find('.stories-editor__slide-add')
-        .off('click')
-        .on('click', function () {
-          if (!slides.length || hasContent(slides[currentSlide])) {
-            saveCurrentSlideState();
-            slides.push({bg: null, media: null, mediaType: null, texts: []});
-            currentSlide = slides.length - 1;
-            restoreSlideStateWithUI();
-            updateSlidesPanel();
-            // Скрыть палитру фона
-            modal
-              .find('.stories-editor__toolbar')
-              .removeClass('stories-editor__toolbar--bg-open');
-          }
-        });
-      /**
-       * Обновляет состояние кнопки добавления слайда
-       */
-      function updateAddBtnState() {
-        const addBtn = modal.find('.stories-editor__slide-add');
-        if (!slides.length || hasContent(slides[currentSlide])) {
-          addBtn.prop('disabled', false);
-        } else {
-          addBtn.prop('disabled', true);
-        }
+      function restoreSlideStateWithUI() {
+        restoreSlideState();
+        updateTextBtnState();
+        setTextPanelVisible(false);
+        updateAddBtnState();
       }
 
       // --- Кастомный confirm ---
@@ -296,313 +631,6 @@ define(['jquery'], function ($) {
           .off('click')
           .on('click', close);
       }
-
-      // --- Подтверждение закрытия модалки ---
-      /**
-       * Обработчик закрытия модального окна с подтверждением
-       */
-      modal
-        .find('[data-action="close-modal"]')
-        .off('click')
-        .on('click', function (e) {
-          if (slides.some(hasContent)) {
-            if (confirmOpen) {
-              return false;
-            }
-            showConfirmModal(
-              'Вы действительно хотите закрыть окно? Весь добавленный контент будет удалён.',
-              function () {
-                slides = [];
-                currentSlide = 0;
-                renderTextBlocks();
-                setTextPanelVisible(false);
-                resetPreview();
-                updateSlidesPanel();
-                if (
-                  window.StoriesModal &&
-                  typeof window.StoriesModal.hide === 'function'
-                ) {
-                  window.StoriesModal.hide();
-                } else {
-                  modal
-                    .removeClass('show')
-                    .css('display', '')
-                    .removeAttr('aria-modal');
-                  $('.modal-backdrop').remove();
-                  $('body').removeClass('modal-open');
-                }
-              }
-            );
-            e.preventDefault();
-            e.stopPropagation();
-            return false;
-          } else {
-            slides = [];
-            currentSlide = 0;
-            renderTextBlocks();
-            setTextPanelVisible(false);
-            resetPreview();
-            updateSlidesPanel();
-            if (
-              window.StoriesModal &&
-              typeof window.StoriesModal.hide === 'function'
-            ) {
-              window.StoriesModal.hide();
-            } else {
-              modal
-                .removeClass('show')
-                .css('display', '')
-                .removeAttr('aria-modal');
-              $('.modal-backdrop').remove();
-              $('body').removeClass('modal-open');
-            }
-          }
-        });
-
-      // --- Выбор фона ---
-      const bgColors = ['#fff', '#ff0000', '#000', '#ff9900', '#00ff00'];
-      /**
-       * Генерирует палитру цветов для выбора фона
-       */
-      function renderBgPalette() {
-        const palette = modal.find('.stories-editor__bg-palette');
-        palette.empty();
-        bgColors.forEach((color) => {
-          palette.append(
-            `<button class=\"stories-editor__bg-color\" data-bg-color=\"${color}\" style=\"background:${color}\"\></button>`
-          );
-        });
-      }
-      modal
-        .find('.stories-editor__tool-bg[data-action="set-bg"]')
-        .on('click', function () {
-          const toolbar = $('#stories-modal').find('.stories-editor__toolbar');
-          toolbar.removeClass('stories-editor__toolbar--text-open');
-          if (slides.length === 0) {
-            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
-            currentSlide = 0;
-          } else if (!hasContent(slides[currentSlide])) {
-            slides[currentSlide].bg = '#fff';
-            slides[currentSlide].media = null;
-            slides[currentSlide].mediaType = null;
-          } else if (slides[currentSlide].bg) {
-            // Если на текущем слайде уже есть фон — просто открыть палитру для изменения
-            // ничего не меняем в slides/currentSlide
-          } else {
-            saveCurrentSlideState();
-            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
-            currentSlide = slides.length - 1;
-          }
-          canvas.css('background', slides[currentSlide].bg || '#fff');
-          canvas.addClass('stories-editor__canvas--has-bg');
-          dropzone.hide();
-          imgPreview.hide();
-          videoPreview.hide();
-          previewContainer.hide();
-          canvas.removeClass('stories-editor__canvas--has-content');
-          modal.find('.stories-editor__bg-color').removeClass('active');
-          modal
-            .find('.stories-editor__toolbar')
-            .addClass('stories-editor__toolbar--bg-open');
-          renderBgPalette();
-          updateSlidesPanel();
-          updateTextBtnState();
-        });
-      modal.on('click', '.stories-editor__bg-color', function () {
-        const color = $(this).data('bg-color');
-        canvas.css('background', color);
-        canvas.addClass('stories-editor__canvas--has-bg');
-        dropzone.hide();
-        imgPreview.hide();
-        videoPreview.hide();
-        previewContainer.hide();
-        canvas.removeClass('stories-editor__canvas--has-content');
-        modal.find('.stories-editor__bg-color').removeClass('active');
-        $(this).addClass('active');
-        if (slides.length === 0) {
-          slides.push({bg: color, media: null, mediaType: null, texts: []});
-          currentSlide = 0;
-        } else {
-          saveCurrentSlideState();
-          slides[currentSlide].bg = color;
-          slides[currentSlide].media = null;
-          slides[currentSlide].mediaType = null;
-        }
-        updateSlidesPanel();
-        updateTextBtnState();
-      });
-      modal.on('click', '.stories-editor__bg-back', function () {
-        modal
-          .find('.stories-editor__toolbar')
-          .removeClass('stories-editor__toolbar--bg-open');
-      });
-
-      /**
-       * Показывает предпросмотр для выбранного файла
-       * @param {File} file
-       */
-      function showPreview(file) {
-        resetPreview();
-        if (file.type.startsWith('image/')) {
-          imgPreview.attr('src', URL.createObjectURL(file)).show();
-        } else if (file.type.startsWith('video/')) {
-          videoPreview.attr('src', URL.createObjectURL(file)).show();
-        }
-        previewContainer.show();
-        dropzone.hide();
-        canvas.addClass('stories-editor__canvas--has-content');
-        canvas.css('background', '');
-        canvas.removeClass('stories-editor__canvas--has-bg');
-        modal.find('.stories-editor__bg-color').removeClass('active');
-        if (slides.length === 0) {
-          slides.push({
-            bg: null,
-            media: file,
-            mediaType: file.type.startsWith('image/') ? 'image' : 'video',
-            texts: [],
-          });
-          currentSlide = 0;
-        } else {
-          saveCurrentSlideState();
-          slides[currentSlide].bg = null;
-          slides[currentSlide].media = file;
-          slides[currentSlide].mediaType = file.type.startsWith('image/')
-            ? 'image'
-            : 'video';
-        }
-        updateSlidesPanel();
-        updateTextBtnState();
-      }
-
-      // --- Dropzone/preview ---
-      fileInput.on('change', function (e) {
-        const file = e.target.files[0];
-        if (file) {
-          showPreview(file);
-        }
-      });
-      dropzone.on('dragenter dragover', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.addClass('stories-editor__dropzone--dragover');
-      });
-      dropzone.on('dragleave dragend drop', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        dropzone.removeClass('stories-editor__dropzone--dragover');
-      });
-      dropzone.on('drop', function (e) {
-        const file = e.originalEvent.dataTransfer.files[0];
-        if (file) {
-          showPreview(file);
-        }
-      });
-
-      /**
-       * Сбрасывает предпросмотр и состояние canvas
-       */
-      function resetPreview() {
-        imgPreview.attr('src', '').hide();
-        videoPreview.attr('src', '').hide();
-        previewContainer.hide();
-        dropzone.show();
-        canvas.removeClass('stories-editor__canvas--has-content');
-        canvas.removeClass('stories-editor__canvas--has-bg');
-        canvas.css('background', '');
-        modal.find('.stories-editor__bg-color').removeClass('active');
-        modal
-          .find('.stories-editor__toolbar')
-          .removeClass('stories-editor__toolbar--bg-open');
-      }
-
-      // --- Закрытие по клику вне модалки ---
-      $(document)
-        .off('mousedown.stories-modal')
-        .on('mousedown.stories-modal', function (e) {
-          const $modal = $('#stories-modal');
-          if (
-            $modal.is(':visible') &&
-            !$(e.target).closest('.modal-content').length
-          ) {
-            if (slides.some(hasContent)) {
-              showConfirmModal(
-                'Вы действительно хотите закрыть окно? Весь добавленный контент будет удалён.',
-                function () {
-                  slides = [];
-                  currentSlide = 0;
-                  renderTextBlocks();
-                  setTextPanelVisible(false);
-                  resetPreview();
-                  updateSlidesPanel();
-                  if (
-                    window.StoriesModal &&
-                    typeof window.StoriesModal.hide === 'function'
-                  ) {
-                    window.StoriesModal.hide();
-                  } else {
-                    $modal
-                      .removeClass('show')
-                      .css('display', '')
-                      .removeAttr('aria-modal');
-                    $('.modal-backdrop').remove();
-                    $('body').removeClass('modal-open');
-                  }
-                }
-              );
-            } else {
-              slides = [];
-              currentSlide = 0;
-              renderTextBlocks();
-              setTextPanelVisible(false);
-              resetPreview();
-              updateSlidesPanel();
-              if (
-                window.StoriesModal &&
-                typeof window.StoriesModal.hide === 'function'
-              ) {
-                window.StoriesModal.hide();
-              } else {
-                $modal
-                  .removeClass('show')
-                  .css('display', '')
-                  .removeAttr('aria-modal');
-                $('.modal-backdrop').remove();
-                $('body').removeClass('modal-open');
-              }
-            }
-          }
-        });
-
-      // --- Делегированный обработчик удаления слайда ---
-      /**
-       * Обработчик удаления слайда с подтверждением
-       */
-      $(document)
-        .off('click.stories-slide-delete')
-        .on(
-          'click.stories-slide-delete',
-          '.stories-editor__slide-delete',
-          function (e) {
-            e.stopPropagation();
-            if (confirmOpen) {
-              return;
-            }
-            const idx = parseInt($(this).data('slide-idx'), 10);
-            const panel = $('.stories-editor__slides-panel');
-            showConfirmModal('Удалить этот слайд?', function () {
-              slides.splice(idx, 1);
-              if (currentSlide >= slides.length) {
-                currentSlide = slides.length - 1;
-              }
-              restoreSlideStateWithUI();
-              updateSlidesPanel();
-              if (slides.length === 0) {
-                panel.hide();
-              }
-            });
-            return false;
-          }
-        );
 
       // --- Текстовые блоки ---
       const textPanel = modal.find('.stories-editor__text-panel');
@@ -825,17 +853,10 @@ define(['jquery'], function ($) {
           selectTextBlockWithPanel(null);
         }
       });
-      /**
-       * Обновляет UI после смены слайда: состояние кнопок и панели редактирования.
-       */
-      function restoreSlideStateWithUI() {
-        restoreSlideState();
-        updateTextBtnState();
-        setTextPanelVisible(false);
-      }
 
-      // --- Drag-n-drop только по ручке ---
+      // --- Drag-n-drop текстовых блоков ---
       let dragState = null;
+
       $(document).on('mousemove', function (e) {
         if (!dragState) {
           return;
@@ -853,6 +874,7 @@ define(['jquery'], function ($) {
         newY = Math.max(0, Math.min(newY, canvasH - blockH));
         dragState.$el.css({left: newX + 'px', top: newY + 'px'});
       });
+
       $(document).on('mouseup', function (e) {
         if (dragState) {
           const slide = slides[currentSlide];
@@ -880,6 +902,32 @@ define(['jquery'], function ($) {
           renderTextBlocks();
           selectTextBlockWithPanel(block ? block.id : null);
         }
+      });
+
+      canvas.on('mousedown', '.stories-text-drag', function (e) {
+        if (e.button !== 0) {
+          return;
+        }
+        const $block = $(this).closest('.stories-text-block');
+        const id = $block.data('id');
+        const slide = slides[currentSlide];
+        if (!slide) {
+          return;
+        }
+        const block = slide.texts.find((t) => t.id === id);
+        if (!block) {
+          return;
+        }
+        dragState = {
+          id,
+          startX: e.pageX,
+          startY: e.pageY,
+          origX: block.x,
+          origY: block.y,
+          $el: $block,
+        };
+        $(document.body).addClass('stories-dragging');
+        e.preventDefault();
       });
 
       // --- Удаление текстового блока ---
@@ -947,31 +995,40 @@ define(['jquery'], function ($) {
         });
       });
 
-      // --- Drag-n-drop только по ручке ---
-      canvas.on('mousedown', '.stories-text-drag', function (e) {
-        if (e.button !== 0) {
+      // --- Делегированный обработчик удаления слайда ---
+      $(document)
+        .off('click.stories-slide-delete')
+        .on(
+          'click.stories-slide-delete',
+          '.stories-editor__slide-delete',
+          function (e) {
+            e.stopPropagation();
+            if (confirmOpen) {
+              return;
+            }
+            const idx = parseInt($(this).data('slide-idx'), 10);
+            const panel = $('.stories-editor__slides-panel');
+            showConfirmModal('Удалить этот слайд?', function () {
+              slides.splice(idx, 1);
+              if (currentSlide >= slides.length) {
+                currentSlide = slides.length - 1;
+              }
+              restoreSlideStateWithUI();
+              updateSlidesPanel();
+              if (slides.length === 0) {
+                panel.hide();
+              }
+            });
+            return false;
+          }
+        );
+
+      // --- Публикация истории ---
+      modal.find('[data-action="publish-story"]').on('click', function () {
+        if (!slides.length || !slides.some(hasContent)) {
           return;
         }
-        const $block = $(this).closest('.stories-text-block');
-        const id = $block.data('id');
-        const slide = slides[currentSlide];
-        if (!slide) {
-          return;
-        }
-        const block = slide.texts.find((t) => t.id === id);
-        if (!block) {
-          return;
-        }
-        dragState = {
-          id,
-          startX: e.pageX,
-          startY: e.pageY,
-          origX: block.x,
-          origY: block.y,
-          $el: $block,
-        };
-        $(document.body).addClass('stories-dragging');
-        e.preventDefault();
+        // TODO: Добавить логику публикации
       });
     },
   };

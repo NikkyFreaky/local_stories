@@ -1,4 +1,4 @@
-<div id="stories-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="storiesModalLabel">
+<div id="stories-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="storiesModalLabel" data-form-type="system">
     <div class="modal-dialog stories-modal__dialog" role="document">
         <div class="modal-content stories-modal__content">
             <div class="modal-header stories-modal__header">
@@ -18,7 +18,7 @@
                             Перетащите сюда фото или видео
                         </div>
                         <label class="stories-editor__file-btn">
-                            <input type="file" class="stories-editor__file-input" data-action="select-file" accept="image/*,video/*" />
+                            <input type="file" class="stories-editor__file-input" data-action="select-file" accept="image/*,video/*" autocomplete="off" />
                         </label>
                     </div>
                     <div class="stories-editor__preview-container">
@@ -46,7 +46,7 @@
                         <div class="stories-editor__text-controls">
                             <label>
                                 Размер:
-                                <select class="stories-editor__text-size">
+                                <select class="stories-editor__text-size" autocomplete="off">
                                     <option value="24">24</option>
                                     <option value="32" selected>32</option>
                                     <option value="40">40</option>
