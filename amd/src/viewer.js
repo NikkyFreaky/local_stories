@@ -1,47 +1,37 @@
 /* eslint-disable linebreak-style */
-define(['jquery'], function ($) {
+define(['jquery', 'core/ajax', 'core/notification'], function (
+  $,
+  Ajax,
+  Notification
+) {
   'use strict';
 
-  // Тестовые данные для прототипа
-  const MOCK_STORY = {
-    id: 1,
-    slides: [
+  /**
+   * Загружает историю по id через AJAX.
+   * @param {number} storyId
+   * @returns {Promise<Object>}
+   */
+  function loadStoryById(storyId) {
+    return Ajax.call([
       {
-        id: 1,
-        duration: 5000,
-        background: '#000',
-        mediaType: 'image',
-        mediaUrl: 'https://picsum.photos/800/600',
-        texts: [
-          {
-            text: 'Тестовый текст 1',
-            x: 50,
-            y: 50,
-            color: '#fff',
-            size: 32,
-            align: 'left',
-          },
-        ],
+        methodname: 'local_stories_get_story',
+        args: {id: storyId},
       },
+    ])[0];
+  }
+
+  /**
+   * Загружает список опубликованных историй через AJAX.
+   * @returns {Promise<Array>}
+   */
+  function loadStoriesList() {
+    return Ajax.call([
       {
-        id: 2,
-        duration: 5000,
-        background: '#222',
-        mediaType: 'image',
-        mediaUrl: 'https://picsum.photos/800/601',
-        texts: [
-          {
-            text: 'Тестовый текст 2',
-            x: 100,
-            y: 100,
-            color: '#fff',
-            size: 24,
-            align: 'center',
-          },
-        ],
+        methodname: 'local_stories_get_stories_list',
+        args: {},
       },
-    ],
-  };
+    ])[0];
+  }
 
   class StoriesViewer {
     constructor() {
@@ -120,11 +110,41 @@ define(['jquery'], function ($) {
       });
     }
 
-    show(story = MOCK_STORY) {
+    show(storyOrId) {
+      if (typeof storyOrId === 'object') {
+        this._showStory(storyOrId);
+      } else if (
+        typeof storyOrId === 'number' ||
+        (typeof storyOrId === 'string' && storyOrId.match(/^\d+$/))
+      ) {
+        // Загрузка истории по id
+        this.$modal.addClass('show');
+        $('body').addClass('modal-open');
+        this.$modal.find('.stories-view-modal__body').addClass('loading');
+        loadStoryById(Number(storyOrId))
+          .then((story) => {
+            this.$modal
+              .find('.stories-view-modal__body')
+              .removeClass('loading');
+            this._showStory(story);
+          })
+          .catch((e) => {
+            this.$modal
+              .find('.stories-view-modal__body')
+              .removeClass('loading');
+            Notification.exception(e);
+            this.hide();
+          });
+      } else {
+        Notification.add('Некорректный идентификатор истории', 'error');
+        this.hide();
+      }
+    }
+
+    _showStory(story) {
       this.story = story;
       this.currentSlideIndex = 0;
       this.isPaused = false;
-
       // Создаем индикаторы прогресса
       this.$progressItems.empty();
       story.slides.forEach(() => {
@@ -132,11 +152,9 @@ define(['jquery'], function ($) {
           '<div class="stories-view-modal__progress-item"></div>'
         );
       });
-
       // Показываем модальное окно
       this.$modal.addClass('show');
       $('body').addClass('modal-open');
-
       // Загружаем первый слайд
       this.loadSlide(0);
     }
@@ -282,17 +300,50 @@ define(['jquery'], function ($) {
 
       // Добавляем глобальный метод для открытия просмотрщика
       window.StoriesViewer = {
-        show: (story) => viewer.show(story),
+        show: (storyOrId) => viewer.show(storyOrId),
       };
 
-      // Для тестирования добавим кнопку в навбар
-      $('.stories-nav').append(
-        $('<button>')
-          .addClass('stories-btn')
-          .text('👁️')
-          .attr('title', 'Просмотр тестовой истории')
-          .on('click', () => viewer.show())
-      );
+      // Лента историй в navbar
+      const $nav = $('.stories-nav');
+      loadStoriesList().then(function (stories) {
+        $nav.find('.stories-btn:not(.stories-create)').remove();
+        if (!stories || !stories.length) {
+          return;
+        }
+        const $createBtn = $nav.find('.stories-create');
+        stories.forEach(function (story) {
+          const $item = $('<div>')
+            .addClass('stories-btn')
+            .attr('title', story.title)
+            .css({display: 'inline-block', cursor: 'pointer', margin: '0 4px'})
+            .append(
+              story.preview
+                ? $('<img>').attr('src', story.preview).css({
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '2px solid #ccc',
+                  })
+                : $('<div>')
+                    .css({
+                      width: 48,
+                      height: 48,
+                      borderRadius: '50%',
+                      background: '#eee',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#888',
+                    })
+                    .text(story.title[0] || '?')
+            )
+            .on('click', function () {
+              viewer.show(story.id);
+            });
+          $createBtn.after($item);
+        });
+      });
     },
   };
 });
