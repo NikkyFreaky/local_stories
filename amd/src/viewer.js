@@ -188,6 +188,39 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.loadSlide(0);
       // Обновляем состояние стрелок историй
       this.updateStoryNavButtons();
+      // --- Предпросмотр соседних историй ---
+      const $prevPreview = this.$modal.find(
+        '.stories-view-modal__preview--prev'
+      );
+      const $nextPreview = this.$modal.find(
+        '.stories-view-modal__preview--next'
+      );
+      $prevPreview.empty().hide();
+      $nextPreview.empty().hide();
+      if (this.storiesList && this.storiesList.length > 1) {
+        // prev: более старая (индекс +1)
+        if (this.currentStoryIndex < this.storiesList.length - 1) {
+          const prevStory = this.storiesList[this.currentStoryIndex + 1];
+          if (prevStory && prevStory.preview) {
+            $prevPreview
+              .html('<img src="' + prevStory.preview + '" alt="">')
+              .show();
+          } else {
+            $prevPreview.html('').css('background', '#222').show();
+          }
+        }
+        // next: более новая (индекс -1)
+        if (this.currentStoryIndex > 0) {
+          const nextStory = this.storiesList[this.currentStoryIndex - 1];
+          if (nextStory && nextStory.preview) {
+            $nextPreview
+              .html('<img src="' + nextStory.preview + '" alt="">')
+              .show();
+          } else {
+            $nextPreview.html('').css('background', '#222').show();
+          }
+        }
+      }
     }
 
     hide() {
@@ -395,6 +428,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       }
 
       const viewer = new StoriesViewer();
+      window.StoriesViewerInstance = viewer;
 
       // Добавляем глобальный метод для открытия просмотрщика
       window.StoriesViewer = {
