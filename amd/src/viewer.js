@@ -58,33 +58,11 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
     }
 
     bindEvents() {
-      // Навигация
-      this.$modal
-        .find('[data-action="prev-slide"]')
-        .on('click', () => this.prevSlide());
-      this.$modal
-        .find('[data-action="next-slide"]')
-        .on('click', () => this.nextSlide());
-
-      // Навигация между историями
-      this.$modal
-        .find('[data-action="prev-story"]')
-        .on('click', () => this.prevStory());
-      this.$modal
-        .find('[data-action="next-story"]')
-        .on('click', () => this.nextStory());
-
-      // Закрытие
-      this.$modal
-        .find('[data-action="close-modal"]')
-        .on('click', () => this.hide());
-
       // Клавиатура
       $(document).on('keydown.stories-viewer', (e) => {
         if (!this.$modal.hasClass('show')) {
           return;
         }
-
         switch (e.key) {
           case 'ArrowLeft':
             this.prevSlide();
@@ -102,32 +80,51 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         }
       });
 
-      // Клик по сторонам для навигации ИЛИ по контенту для паузы
-      this.$modal.on('click', (e) => {
-        const $target = $(e.target);
+      // Кнопки навигации между историями
+      this.$modal
+        .find('[data-action="prev-story"]')
+        .on('click', () => this.prevStory());
+      this.$modal
+        .find('[data-action="next-story"]')
+        .on('click', () => this.nextStory());
+      // Кнопка закрытия
+      this.$modal
+        .find('[data-action="close-modal"]')
+        .on('click', () => this.hide());
 
-        // 1. Игнорируем клики по специальным кнопкам управления (они имеют свои обработчики)
-        if (
-          $target.closest(
-            '[data-action="prev-slide"], [data-action="next-slide"], [data-action="close-modal"]'
-          ).length
-        ) {
+      // Новый UX: удержание ЛКМ — пауза, клик — навигация по слайдам
+      let pauseTimeout = null;
+      let isHolding = false;
+      const viewer = this.$viewer;
+      viewer.on('mousedown', (e) => {
+        if (e.button !== 0) {
+          return;
+        } // Только ЛКМ
+        isHolding = false;
+        pauseTimeout = setTimeout(() => {
+          isHolding = true;
+          if (!this.isPaused) {
+            this.togglePause();
+          }
+        }, 150);
+      });
+      viewer.on('mouseup mouseleave', () => {
+        clearTimeout(pauseTimeout);
+        if (isHolding && this.isPaused) {
+          this.togglePause();
+        }
+        isHolding = false;
+      });
+      viewer.on('click', (e) => {
+        // Если был холд — не навигируем
+        if (isHolding) {
           return;
         }
-
-        // 2. Если клик внутри области просмотра слайда (.stories-view-modal__viewer)
-        if ($target.closest('.stories-view-modal__viewer').length) {
-          this.togglePause();
-          return; // Клик обработан как пауза/воспроизведение
-        }
-
-        // 3. Если клик не по контролам и не по контенту, то это навигация по краям модального окна
-        const modalRect = this.$modal[0].getBoundingClientRect();
-        const relativeClickX = e.clientX - modalRect.left;
-
-        if (relativeClickX < modalRect.width * 0.3) {
+        const rect = viewer[0].getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if (x < rect.width / 2) {
           this.prevSlide();
-        } else if (relativeClickX > modalRect.width * 0.7) {
+        } else {
           this.nextSlide();
         }
       });
@@ -347,39 +344,35 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
     }
 
     nextStory() {
+      if (this.storiesList && this.currentStoryIndex > 0) {
+        this.currentStoryIndex--;
+        const nextStory = this.storiesList[this.currentStoryIndex];
+        this.show(nextStory.id, this.storiesList, this.currentStoryIndex);
+      }
+    }
+
+    prevStory() {
       if (
         this.storiesList &&
         this.currentStoryIndex < this.storiesList.length - 1
       ) {
         this.currentStoryIndex++;
-        const nextStory = this.storiesList[this.currentStoryIndex];
-        this.show(nextStory.id, this.storiesList, this.currentStoryIndex);
-      } else {
-        this.hide();
-      }
-    }
-
-    prevStory() {
-      if (this.storiesList && this.currentStoryIndex > 0) {
-        this.currentStoryIndex--;
         const prevStory = this.storiesList[this.currentStoryIndex];
         this.show(prevStory.id, this.storiesList, this.currentStoryIndex);
       }
     }
 
     updateStoryNavButtons() {
-      // Деактивируем стрелки, если нет следующей/предыдущей истории
+      // next-story дизейблится на самой новой (индекс 0)
+      // prev-story дизейблится на самой старой (индекс length-1)
       const $prev = this.$modal.find('.stories-view-modal__nav-story--prev');
       const $next = this.$modal.find('.stories-view-modal__nav-story--next');
-      if (this.currentStoryIndex <= 0) {
+      if (this.currentStoryIndex === this.storiesList.length - 1) {
         $prev.prop('disabled', true);
       } else {
         $prev.prop('disabled', false);
       }
-      if (
-        !this.storiesList ||
-        this.currentStoryIndex >= this.storiesList.length - 1
-      ) {
+      if (!this.storiesList || this.currentStoryIndex === 0) {
         $next.prop('disabled', true);
       } else {
         $next.prop('disabled', false);
