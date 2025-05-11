@@ -51,6 +51,8 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.currentSlideIndex = 0;
       this.timer = null;
       this.isPaused = false;
+      this.storiesList = [];
+      this.currentStoryIndex = 0;
 
       this.bindEvents();
     }
@@ -63,6 +65,14 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.$modal
         .find('[data-action="next-slide"]')
         .on('click', () => this.nextSlide());
+
+      // Навигация между историями
+      this.$modal
+        .find('[data-action="prev-story"]')
+        .on('click', () => this.prevStory());
+      this.$modal
+        .find('[data-action="next-story"]')
+        .on('click', () => this.nextStory());
 
       // Закрытие
       this.$modal
@@ -123,14 +133,17 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       });
     }
 
-    show(storyOrId) {
+    show(storyOrId, storiesList = null, storyIndex = null) {
+      if (storiesList) {
+        this.storiesList = storiesList;
+        this.currentStoryIndex = storyIndex !== null ? storyIndex : 0;
+      }
       if (typeof storyOrId === 'object') {
         this._showStory(storyOrId);
       } else if (
         typeof storyOrId === 'number' ||
         (typeof storyOrId === 'string' && storyOrId.match(/^\d+$/))
       ) {
-        // Загрузка истории по id
         this.$modal.addClass('show');
         $('body').addClass('modal-open');
         this.$modal.find('.stories-view-modal__body').addClass('loading');
@@ -170,6 +183,8 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       $('body').addClass('modal-open');
       // Загружаем первый слайд
       this.loadSlide(0);
+      // Обновляем состояние стрелок историй
+      this.updateStoryNavButtons();
     }
 
     hide() {
@@ -303,7 +318,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       if (this.story && this.currentSlideIndex < this.story.slides.length - 1) {
         this.loadSlide(this.currentSlideIndex + 1);
       } else {
-        this.hide(); // Закрываем, если это был последний слайд
+        this.nextStory();
       }
     }
 
@@ -330,6 +345,46 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       }
       // Здесь раньше могло быть обновление иконок this.$pauseBtn
     }
+
+    nextStory() {
+      if (
+        this.storiesList &&
+        this.currentStoryIndex < this.storiesList.length - 1
+      ) {
+        this.currentStoryIndex++;
+        const nextStory = this.storiesList[this.currentStoryIndex];
+        this.show(nextStory.id, this.storiesList, this.currentStoryIndex);
+      } else {
+        this.hide();
+      }
+    }
+
+    prevStory() {
+      if (this.storiesList && this.currentStoryIndex > 0) {
+        this.currentStoryIndex--;
+        const prevStory = this.storiesList[this.currentStoryIndex];
+        this.show(prevStory.id, this.storiesList, this.currentStoryIndex);
+      }
+    }
+
+    updateStoryNavButtons() {
+      // Деактивируем стрелки, если нет следующей/предыдущей истории
+      const $prev = this.$modal.find('.stories-view-modal__nav-story--prev');
+      const $next = this.$modal.find('.stories-view-modal__nav-story--next');
+      if (this.currentStoryIndex <= 0) {
+        $prev.prop('disabled', true);
+      } else {
+        $prev.prop('disabled', false);
+      }
+      if (
+        !this.storiesList ||
+        this.currentStoryIndex >= this.storiesList.length - 1
+      ) {
+        $next.prop('disabled', true);
+      } else {
+        $next.prop('disabled', false);
+      }
+    }
   }
 
   return {
@@ -353,7 +408,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           return;
         }
         const $createBtn = $nav.find('.stories-create');
-        stories.forEach(function (story) {
+        stories.forEach(function (story, idx) {
           const $item = $('<div>')
             .addClass('stories-btn')
             .attr('title', story.title)
@@ -381,7 +436,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
                     .text(story.title[0] || '?')
             )
             .on('click', function () {
-              viewer.show(story.id);
+              viewer.show(story.id, stories, idx);
             });
           $createBtn.after($item);
         });
