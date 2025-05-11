@@ -90,7 +90,7 @@ class upload_file extends external_api {
         ]);
         self::log_debug('params: ' . json_encode($params));
         // Проверяем тип файла
-        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm'];
+        $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'video/mp4', 'video/webm', 'video/quicktime'];
         if (!in_array($params['filetype'], $allowedTypes)) {
             self::log_debug('invalid filetype: ' . $params['filetype']);
             throw new \moodle_exception('error:invalidfiletype', 'local_stories');

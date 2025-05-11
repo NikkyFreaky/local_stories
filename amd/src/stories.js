@@ -179,8 +179,59 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         resetPreview();
         if (file.type.startsWith('image/')) {
           imgPreview.attr('src', URL.createObjectURL(file)).show();
+          if (slides.length === 0) {
+            slides.push({
+              bg: null,
+              media: file,
+              mediaType: 'image',
+              duration: 5000,
+              texts: [],
+            });
+            currentSlide = 0;
+          } else {
+            saveCurrentSlideState();
+            slides[currentSlide].bg = null;
+            slides[currentSlide].media = file;
+            slides[currentSlide].mediaType = 'image';
+            slides[currentSlide].duration = 5000;
+          }
+          updateSlidesPanel();
+          updateTextBtnState();
+          updateAddBtnState();
+          updateBgBtnState();
         } else if (file.type.startsWith('video/')) {
-          videoPreview.attr('src', URL.createObjectURL(file)).show();
+          const url = URL.createObjectURL(file);
+          videoPreview.attr('src', url).show();
+          const tempVideo = document.createElement('video');
+          tempVideo.preload = 'metadata';
+          tempVideo.src = url;
+          tempVideo.onloadedmetadata = function () {
+            let duration = Math.floor(tempVideo.duration * 1000);
+            if (duration > 60000) {
+              duration = 60000;
+            }
+            if (slides.length === 0) {
+              slides.push({
+                bg: null,
+                media: file,
+                mediaType: 'video',
+                duration: duration,
+                texts: [],
+              });
+              currentSlide = 0;
+            } else {
+              saveCurrentSlideState();
+              slides[currentSlide].bg = null;
+              slides[currentSlide].media = file;
+              slides[currentSlide].mediaType = 'video';
+              slides[currentSlide].duration = duration;
+            }
+            updateSlidesPanel();
+            updateTextBtnState();
+            updateAddBtnState();
+            updateBgBtnState();
+            URL.revokeObjectURL(url);
+          };
         }
         previewContainer.show();
         dropzone.hide();
@@ -188,26 +239,6 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         canvas.css('background', '');
         canvas.removeClass('stories-editor__canvas--has-bg');
         modal.find('.stories-editor__bg-color').removeClass('active');
-        if (slides.length === 0) {
-          slides.push({
-            bg: null,
-            media: file,
-            mediaType: file.type.startsWith('image/') ? 'image' : 'video',
-            texts: [],
-          });
-          currentSlide = 0;
-        } else {
-          saveCurrentSlideState();
-          slides[currentSlide].bg = null;
-          slides[currentSlide].media = file;
-          slides[currentSlide].mediaType = file.type.startsWith('image/')
-            ? 'image'
-            : 'video';
-        }
-        updateSlidesPanel();
-        updateTextBtnState();
-        updateAddBtnState();
-        updateBgBtnState();
       }
 
       // --- Dropzone/preview ---
