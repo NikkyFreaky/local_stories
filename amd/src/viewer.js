@@ -45,7 +45,6 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.$image = this.$modal.find('.stories-view-modal__image');
       this.$video = this.$modal.find('.stories-view-modal__video');
       this.$texts = this.$modal.find('.stories-view-modal__texts');
-      this.$pauseBtn = this.$modal.find('.stories-view-modal__pause');
 
       this.story = null;
       this.currentSlideIndex = 0;
@@ -63,9 +62,6 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.$modal
         .find('[data-action="next-slide"]')
         .on('click', () => this.nextSlide());
-
-      // Пауза/воспроизведение
-      this.$pauseBtn.on('click', () => this.togglePause());
 
       // Закрытие
       this.$modal
@@ -95,17 +91,33 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         }
       });
 
-      // Клик по сторонам для навигации
+      // Клик по сторонам для навигации ИЛИ по контенту для паузы
       this.$modal.on('click', (e) => {
-        if (!$(e.target).closest('.stories-view-modal__controls').length) {
-          const clickX = e.clientX;
-          const modalWidth = this.$modal.width();
+        const $target = $(e.target);
 
-          if (clickX < modalWidth * 0.3) {
-            this.prevSlide();
-          } else if (clickX > modalWidth * 0.7) {
-            this.nextSlide();
-          }
+        // 1. Игнорируем клики по специальным кнопкам управления (они имеют свои обработчики)
+        if (
+          $target.closest(
+            '[data-action="prev-slide"], [data-action="next-slide"], [data-action="close-modal"]'
+          ).length
+        ) {
+          return;
+        }
+
+        // 2. Если клик внутри области просмотра слайда (.stories-view-modal__viewer)
+        if ($target.closest('.stories-view-modal__viewer').length) {
+          this.togglePause();
+          return; // Клик обработан как пауза/воспроизведение
+        }
+
+        // 3. Если клик не по контролам и не по контенту, то это навигация по краям модального окна
+        const modalRect = this.$modal[0].getBoundingClientRect();
+        const relativeClickX = e.clientX - modalRect.left;
+
+        if (relativeClickX < modalRect.width * 0.3) {
+          this.prevSlide();
+        } else if (relativeClickX > modalRect.width * 0.7) {
+          this.nextSlide();
         }
       });
     }
@@ -255,38 +267,40 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
 
     prevSlide() {
       if (this.currentSlideIndex > 0) {
-        this.currentSlideIndex--;
-        this.loadSlide(this.currentSlideIndex);
+        this.loadSlide(this.currentSlideIndex - 1);
       }
     }
 
     nextSlide() {
-      if (this.currentSlideIndex < this.story.slides.length - 1) {
-        this.currentSlideIndex++;
-        this.loadSlide(this.currentSlideIndex);
+      if (this.story && this.currentSlideIndex < this.story.slides.length - 1) {
+        this.loadSlide(this.currentSlideIndex + 1);
       } else {
-        this.hide();
+        this.hide(); // Закрываем, если это был последний слайд
       }
     }
 
     togglePause() {
       this.isPaused = !this.isPaused;
-      this.$pauseBtn.toggleClass('paused', this.isPaused);
-
       if (this.isPaused) {
         this.stopTimer();
-        if (this.$video.is(':visible')) {
+        if (
+          this.story &&
+          this.story.slides[this.currentSlideIndex].mediaType === 'video'
+        ) {
           this.$video[0].pause();
         }
+        // Удалены строки, связанные с this.$pauseBtn и обновлением его иконок
       } else {
-        const slide = this.story.slides[this.currentSlideIndex];
-        if (slide) {
-          this.startTimer(slide.duration);
-          if (this.$video.is(':visible')) {
+        if (this.story && this.story.slides[this.currentSlideIndex]) {
+          // Если мы возобновляем, нужно корректно запустить таймер
+          // Возможно, потребуется передать оставшееся время, но для простоты пока полный duration
+          this.startTimer(this.story.slides[this.currentSlideIndex].duration);
+          if (this.story.slides[this.currentSlideIndex].mediaType === 'video') {
             this.$video[0].play();
           }
         }
       }
+      // Здесь раньше могло быть обновление иконок this.$pauseBtn
     }
   }
 
