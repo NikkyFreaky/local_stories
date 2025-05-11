@@ -703,7 +703,7 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  z-index: 6;
+  z-index: 11;
 }
 .stories-view-modal__nav-story--prev {
   left: -50px;
@@ -713,6 +713,7 @@
 }
 .stories-view-modal__nav-story:disabled,
 .stories-view-modal__nav-story[disabled] {
+  display: none !important;
   opacity: 0.4;
   cursor: not-allowed;
 }

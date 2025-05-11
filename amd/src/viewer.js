@@ -143,6 +143,12 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       ) {
         this.$modal.addClass('show');
         $('body').addClass('modal-open');
+        // Добавляем стандартный Bootstrap backdrop
+        if ($('.modal-backdrop').length === 0) {
+          $('<div class="modal-backdrop fade show"></div>').appendTo(
+            document.body
+          );
+        }
         this.$modal.find('.stories-view-modal__body').addClass('loading');
         loadStoryById(Number(storyOrId))
           .then((story) => {
@@ -187,6 +193,8 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
     hide() {
       this.$modal.removeClass('show');
       $('body').removeClass('modal-open');
+      // Удаляем backdrop
+      $('.modal-backdrop').remove();
       this.stopTimer();
       this.$viewer.css('background-color', '');
 
