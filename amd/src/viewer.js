@@ -45,6 +45,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.$image = this.$modal.find('.stories-view-modal__image');
       this.$video = this.$modal.find('.stories-view-modal__video');
       this.$texts = this.$modal.find('.stories-view-modal__texts');
+      this.$viewer = this.$modal.find('.stories-view-modal__viewer');
 
       this.story = null;
       this.currentSlideIndex = 0;
@@ -175,6 +176,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.$modal.removeClass('show');
       $('body').removeClass('modal-open');
       this.stopTimer();
+      this.$viewer.css('background-color', '');
 
       // Очищаем состояние
       this.story = null;
@@ -190,9 +192,11 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       if (!slide) {
         return;
       }
+      this.currentSlideIndex = index;
 
       // Останавливаем предыдущий таймер
       this.stopTimer();
+      this.$viewer.css('background-color', '');
 
       // Обновляем прогресс
       this.$progressItems.children().removeClass('active viewed');
@@ -204,14 +208,38 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       this.$video.hide().attr('src', '');
       this.$texts.empty();
 
+      // Если нет картинки/видео, явно применяем фон к .stories-view-modal__media-container
+      if (!slide.mediaType && slide.background) {
+        this.$viewer
+          .find('.stories-view-modal__media-container')
+          .css('background', slide.background);
+      } else {
+        this.$viewer
+          .find('.stories-view-modal__media-container')
+          .css('background', '');
+      }
+
       // Загружаем медиа
       if (slide.mediaType === 'image') {
-        this.$image.attr('src', slide.mediaUrl).show();
-      } else if (slide.mediaType === 'video') {
-        this.$video.attr('src', slide.mediaUrl).show();
-        if (!this.isPaused) {
-          this.$video[0].play();
+        if (slide.mediaUrl) {
+          this.$image.attr('src', slide.mediaUrl).show();
+        } else {
+          this.$image.hide().attr('src', '');
         }
+      } else if (slide.mediaType === 'video') {
+        if (slide.mediaUrl) {
+          this.$video.attr('src', slide.mediaUrl).show();
+          if (!this.isPaused) {
+            this.$video[0].play();
+          }
+        } else {
+          this.$video.hide().attr('src', '');
+        }
+      }
+
+      // Устанавливаем фон слайда, если он есть
+      if (slide.background) {
+        this.$viewer.css('background-color', slide.background);
       }
 
       // Добавляем тексты

@@ -288,18 +288,31 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           const toolbar = $('#stories-modal').find('.stories-editor__toolbar');
           toolbar.removeClass('stories-editor__toolbar--text-open');
           if (slides.length === 0) {
-            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
+            slides.push({
+              bg: '#fff',
+              media: null,
+              mediaType: null,
+              mediaUrl: null,
+              texts: [],
+            });
             currentSlide = 0;
           } else if (!hasContent(slides[currentSlide])) {
             slides[currentSlide].bg = '#fff';
             slides[currentSlide].media = null;
             slides[currentSlide].mediaType = null;
+            slides[currentSlide].mediaUrl = null;
           } else if (slides[currentSlide].bg) {
             // Если на текущем слайде уже есть фон — просто открыть палитру для изменения
             // ничего не меняем в slides/currentSlide
           } else {
             saveCurrentSlideState();
-            slides.push({bg: '#fff', media: null, mediaType: null, texts: []});
+            slides.push({
+              bg: '#fff',
+              media: null,
+              mediaType: null,
+              mediaUrl: null,
+              texts: [],
+            });
             currentSlide = slides.length - 1;
           }
           canvas.css('background', slides[currentSlide].bg || '#fff');
@@ -330,13 +343,20 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         modal.find('.stories-editor__bg-color').removeClass('active');
         $(this).addClass('active');
         if (slides.length === 0) {
-          slides.push({bg: color, media: null, mediaType: null, texts: []});
+          slides.push({
+            bg: color,
+            media: null,
+            mediaType: null,
+            mediaUrl: null,
+            texts: [],
+          });
           currentSlide = 0;
         } else {
           saveCurrentSlideState();
           slides[currentSlide].bg = color;
           slides[currentSlide].media = null;
           slides[currentSlide].mediaType = null;
+          slides[currentSlide].mediaUrl = null;
         }
         updateSlidesPanel();
         updateTextBtnState();
@@ -625,16 +645,13 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         }
         slides[currentSlide] = {
           bg: canvas.css('background-color') || null,
-          media: imgPreview.is(':visible')
-            ? imgPreview.attr('src')
-            : videoPreview.is(':visible')
-            ? videoPreview.attr('src')
-            : null,
+          media: slides[currentSlide].media || null,
           mediaType: imgPreview.is(':visible')
             ? 'image'
             : videoPreview.is(':visible')
             ? 'video'
             : null,
+          mediaUrl: slides[currentSlide].mediaUrl || null,
           texts: slides[currentSlide].texts || [],
         };
       }
@@ -1125,6 +1142,22 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
 
         Promise.all(uploads)
           .then(() => {
+            // console.log('DEBUG SLIDES:', JSON.stringify(slides, null, 2));
+            window.DEBUG_SLIDES = JSON.parse(JSON.stringify(slides));
+            // Проверка: все ли mediaUrl присутствуют для слайдов с mediaType
+            const missingMedia = slides.some(
+              (slide) =>
+                slide.mediaType &&
+                (slide.mediaType === 'image' || slide.mediaType === 'video') &&
+                !slide.mediaUrl
+            );
+            if (missingMedia) {
+              Notification.alert(
+                'Ошибка',
+                'Не удалось загрузить все медиафайлы. Попробуйте ещё раз.'
+              );
+              return Promise.reject('Missing mediaUrl');
+            }
             const data = {
               title: 'Story ' + Date.now(),
               slides: slides.map((slide, index) => ({
