@@ -58,6 +58,12 @@ class create_story extends external_api {
             'slides' => $slides
         ]);
 
+        // Если не передано время жизни, ставим 24 часа по умолчанию
+        if (empty($params['expires_at'])) {
+            $params['expires_at'] = time() + 24 * 3600;
+            // $params['expires_at'] = time() + 60;
+        }
+
         // Создаем историю
         $data = (object)[
             'title' => $params['title'],

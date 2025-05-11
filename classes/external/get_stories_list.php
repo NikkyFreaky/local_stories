@@ -22,7 +22,16 @@ class get_stories_list extends external_api {
     public static function execute() {
         global $DB;
         require_capability('local/stories:view', context_system::instance());
-        $records = $DB->get_records('local_stories', ['status' => stories::STATUS_PUBLISHED, 'deleted' => 0], 'created_at DESC');
+        $now = time();
+        $records = $DB->get_records_select(
+            'local_stories',
+            'status = :status AND deleted = 0 AND expires_at > :now',
+            [
+                'status' => stories::STATUS_PUBLISHED,
+                'now' => $now
+            ],
+            'created_at DESC'
+        );
         $result = [];
         foreach ($records as $story) {
             // Превью — первое изображение из первого слайда
