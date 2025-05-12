@@ -28,20 +28,29 @@
                 </div>
                 <!-- Правая часть: инструменты -->
                 <div class="stories-editor__toolbar">
-                    <button type="button" class="stories-editor__tool-btn stories-editor__tool-text" data-action="add-text">
-                        <i class="fa fa-font me-2"></i>Текст
-                    </button>
-                    <button type="button" class="stories-editor__tool-btn stories-editor__tool-bg" data-action="set-bg">
-                        <i class="fa fa-image me-2"></i>Фон
-                    </button>
+                    <div class="stories-editor__toolbar-btns">
+                        <button type="button" class="stories-editor__tool-btn stories-editor__tool-text" data-action="add-text">
+                            <i class="fa fa-font me-2"></i>
+                            <span class="stories-editor__tool-label">Текст</span>
+                        </button>
+                        <button type="button" class="stories-editor__tool-btn stories-editor__tool-bg" data-action="set-bg">
+                            <i class="fa fa-image me-2"></i>
+                            <span class="stories-editor__tool-label">Фон</span>
+                        </button>
+                    </div>
                     <div class="stories-editor__bg-panel">
-                        <button type="button" class="stories-editor__bg-back">&larr;</button>
-                        <div class="stories-editor__bg-title">Фон</div>
+                        <div class="stories-editor__bg-container">
+                            <button type="button" class="stories-editor__bg-back">&larr;</button>
+                            <div class="stories-editor__bg-title">Фон</div>
+                        </div>
                         <div class="stories-editor__bg-label">Цвет</div>
                         <div class="stories-editor__bg-palette"></div>
                     </div>
                     <div class="stories-editor__text-panel">
-                        <button type="button" class="stories-editor__text-back">&larr;</button>
+                        <div class="stories-editor__text-container">
+                            <button type="button" class="stories-editor__text-back">&larr;</button>
+                            <div class="stories-editor__text-title">Текст</div>
+                        </div>                       
                         <button type="button" class="stories-editor__text-add" data-action="add-text-block">+ Добавить текст</button>
                         <div class="stories-editor__text-controls">
                             <label>
@@ -54,16 +63,16 @@
                                 </select>
                             </label>
                             <div class="stories-editor__text-align">
-                                <button type="button" data-align="left" title="Выровнять влево">⯇</button>
-                                <button type="button" data-align="center" title="Выровнять по центру">≡</button>
-                                <button type="button" data-align="right" title="Выровнять вправо">⯈</button>
+                                <button class="stories-editor__btn-align" type="button" data-align="left" title="Выровнять влево">⯇</button>
+                                <button class="stories-editor__btn-align" type="button" data-align="center" title="Выровнять по центру">≡</button>
+                                <button class="stories-editor__btn-align" type="button" data-align="right" title="Выровнять вправо">⯈</button>
                             </div>
                             <div class="stories-editor__text-colors">
-                                <button type="button" data-color="#fff" style="background:#fff;"></button>
-                                <button type="button" data-color="#000" style="background:#000;"></button>
-                                <button type="button" data-color="#ff0000" style="background:#ff0000;"></button>
-                                <button type="button" data-color="#ff9900" style="background:#ff9900;"></button>
-                                <button type="button" data-color="#00ff00" style="background:#00ff00;"></button>
+                                <button class="stories-editor__text-color" type="button" data-color="#fff" style="background:#fff;"></button>
+                                <button class="stories-editor__text-color" type="button" data-color="#000" style="background:#000;"></button>
+                                <button class="stories-editor__text-color" type="button" data-color="#ff0000" style="background:#ff0000;"></button>
+                                <button class="stories-editor__text-color" type="button" data-color="#ff9900" style="background:#ff9900;"></button>
+                                <button class="stories-editor__text-color" type="button" data-color="#00ff00" style="background:#00ff00;"></button>
                             </div>
                         </div>
                     </div>

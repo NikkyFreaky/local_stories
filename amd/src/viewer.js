@@ -389,6 +389,8 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         this.currentStoryIndex--;
         const nextStory = this.storiesList[this.currentStoryIndex];
         this.show(nextStory.id, this.storiesList, this.currentStoryIndex);
+      } else {
+        this.hide();
       }
     }
 
@@ -447,32 +449,20 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           const $item = $('<div>')
             .addClass('stories-btn')
             .attr('title', story.title)
-            .css({display: 'inline-block', cursor: 'pointer', margin: '0 4px'})
-            .append(
-              story.preview
-                ? $('<img>').attr('src', story.preview).css({
-                    width: 48,
-                    height: 48,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '2px solid #ccc',
-                  })
-                : $('<div>')
-                    .css({
-                      width: 48,
-                      height: 48,
-                      borderRadius: '50%',
-                      background: '#eee',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#888',
-                    })
-                    .text(story.title[0] || '?')
-            )
             .on('click', function () {
               viewer.show(story.id, stories, idx);
             });
+          if (story.preview) {
+            $item.append(
+              $('<img>').attr('src', story.preview).addClass('stories-btn-img')
+            );
+          } else {
+            $item.append(
+              $('<div>')
+                .addClass('stories-btn-placeholder')
+                .text(story.title[0] || '?')
+            );
+          }
           $createBtn.after($item);
         });
       });

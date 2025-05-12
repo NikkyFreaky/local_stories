@@ -171,6 +171,9 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       const videoPreview = modal.find('.stories-editor__preview-video');
       const previewContainer = modal.find('.stories-editor__preview-container');
 
+      let currentImageUrl = null;
+      let currentVideoUrl = null;
+
       /**
        * Показывает предпросмотр для выбранного файла
        * @param {File} file - Файл для предпросмотра
@@ -178,7 +181,12 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       function showPreview(file) {
         resetPreview();
         if (file.type.startsWith('image/')) {
-          imgPreview.attr('src', URL.createObjectURL(file)).show();
+          if (currentImageUrl) {
+            URL.revokeObjectURL(currentImageUrl);
+            currentImageUrl = null;
+          }
+          currentImageUrl = URL.createObjectURL(file);
+          imgPreview.attr('src', currentImageUrl).show();
           if (slides.length === 0) {
             slides.push({
               bg: null,
@@ -200,11 +208,15 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           updateAddBtnState();
           updateBgBtnState();
         } else if (file.type.startsWith('video/')) {
-          const url = URL.createObjectURL(file);
-          videoPreview.attr('src', url).show();
+          if (currentVideoUrl) {
+            URL.revokeObjectURL(currentVideoUrl);
+            currentVideoUrl = null;
+          }
+          currentVideoUrl = URL.createObjectURL(file);
+          videoPreview.attr('src', currentVideoUrl).show();
           const tempVideo = document.createElement('video');
           tempVideo.preload = 'metadata';
-          tempVideo.src = url;
+          tempVideo.src = currentVideoUrl;
           tempVideo.onloadedmetadata = function () {
             let duration = Math.floor(tempVideo.duration * 1000);
             if (duration > 60000) {
@@ -230,7 +242,6 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
             updateTextBtnState();
             updateAddBtnState();
             updateBgBtnState();
-            URL.revokeObjectURL(url);
           };
         }
         previewContainer.show();
@@ -448,6 +459,14 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
        * Сбрасывает предпросмотр и состояние canvas
        */
       function resetPreview() {
+        if (currentImageUrl) {
+          URL.revokeObjectURL(currentImageUrl);
+          currentImageUrl = null;
+        }
+        if (currentVideoUrl) {
+          URL.revokeObjectURL(currentVideoUrl);
+          currentVideoUrl = null;
+        }
         imgPreview.attr('src', '').hide();
         videoPreview.attr('src', '').hide();
         previewContainer.hide();
@@ -529,19 +548,11 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           const $div = $('<div class="stories-text-block"></div>')
             .attr('data-id', block.id)
             .css({
-              position: 'absolute',
               left: block.x + 'px',
               top: block.y + 'px',
               color: block.color,
               fontSize: block.size + 'px',
               textAlign: block.align,
-              cursor: 'pointer',
-              userSelect: 'none',
-              zIndex: 10,
-              minWidth: '40px',
-              minHeight: '32px',
-              padding: '2px 8px',
-              background: 'transparent',
             })
             .text(block.text)
             .prepend(
@@ -581,15 +592,40 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
             if ($div.find('.stories-text-edit').length) {
               return;
             }
-            const width = $div.width();
-            const height = $div.height();
             const $textarea = $(
               '<textarea class="stories-text-edit"></textarea>'
-            )
-              .val(block.text)
-              .css({width: width, height: height});
+            ).val(block.text);
             $div.empty().append($textarea);
             $textarea.focus().select();
+
+            /**
+             * Автоматически изменяет размер textarea под контент
+             * @param {HTMLTextAreaElement} textarea
+             */
+            function autoResizeTextarea(textarea) {
+              // Сначала сбрасываем высоту, чтобы получить правильный scrollHeight
+              textarea.style.height = 'auto';
+              textarea.style.height =
+                Math.max(32, textarea.scrollHeight) + 'px';
+
+              // Получаем максимальную ширину от родителя
+              const parentWidth = $(textarea).parent().width();
+              // Устанавливаем временную ширину для измерения
+              textarea.style.width = '1px';
+              // Получаем реальную ширину контента
+              const contentWidth = Math.max(40, textarea.scrollWidth);
+              // Устанавливаем финальную ширину с учетом ограничений
+              textarea.style.width = Math.min(contentWidth, parentWidth) + 'px';
+            }
+
+            // Изменение размера при вводе
+            $textarea.on('input', function () {
+              autoResizeTextarea(this);
+            });
+
+            // Начальное изменение размера
+            autoResizeTextarea($textarea[0]);
+
             /**
              * Сохраняет изменения текста из textarea
              */
@@ -1100,15 +1136,40 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         if ($block.find('.stories-text-edit').length) {
           return;
         }
-        // Сохраняем размеры
-        const width = $block.width();
-        const height = $block.height();
         // Вставляем textarea
-        const $textarea = $('<textarea class="stories-text-edit"></textarea>')
-          .val(block.text)
-          .css({width: width, height: height});
+        const $textarea = $(
+          '<textarea class="stories-text-edit"></textarea>'
+        ).val(block.text);
         $block.empty().append($textarea);
         $textarea.focus().select();
+
+        /**
+         * Автоматически изменяет размер textarea под контент
+         * @param {HTMLTextAreaElement} textarea
+         */
+        function autoResizeTextarea(textarea) {
+          // Сначала сбрасываем высоту, чтобы получить правильный scrollHeight
+          textarea.style.height = 'auto';
+          textarea.style.height = Math.max(32, textarea.scrollHeight) + 'px';
+
+          // Получаем максимальную ширину от родителя
+          const parentWidth = $(textarea).parent().width();
+          // Устанавливаем временную ширину для измерения
+          textarea.style.width = '1px';
+          // Получаем реальную ширину контента
+          const contentWidth = Math.max(40, textarea.scrollWidth);
+          // Устанавливаем финальную ширину с учетом ограничений
+          textarea.style.width = Math.min(contentWidth, parentWidth) + 'px';
+        }
+
+        // Изменение размера при вводе
+        $textarea.on('input', function () {
+          autoResizeTextarea(this);
+        });
+
+        // Начальное изменение размера
+        autoResizeTextarea($textarea[0]);
+
         /**
          * Сохраняет изменения текста из textarea
          */
