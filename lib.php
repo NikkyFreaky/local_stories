@@ -23,25 +23,64 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot . '/local/stories/classes/stories.php');
+
 /**
  * @param \core_renderer $renderer The page renderer.
  * @return string HTML for stories buttons.
  */
 function local_stories_render_navbar_output(\core_renderer $renderer) {
-    global $PAGE;
-    // Подключаем JS модули в правильном порядке
+    global $PAGE, $DB, $USER;
+    $context = \core\context\system::instance();
+
+    $can_view = has_capability('local/stories:view', $context);
+    $can_create = has_capability('local/stories:create', $context);
+
+    if (!$can_view) {
+        return '';
+    }
+
+    $stories = \local_stories\stories::get_list([
+        'status' => \local_stories\stories::STATUS_PUBLISHED,
+        'active' => true,
+    ]);
+
+    // Добавляем информацию о просмотре
+    foreach ($stories as &$story) {
+        $story->seen = $DB->record_exists('local_stories_views', [
+            'story_id' => $story->id,
+            'user_id' => $USER->id,
+        ]);
+    }
+
     $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
-    $PAGE->requires->js_call_amd('local_stories/modal', 'init');
-    $PAGE->requires->js_call_amd('local_stories/stories', 'init');
-    // Только navbar, без модалки!
-    return $renderer->render_from_template('local_stories/navbar', []);
+
+    if ($can_create) {
+        $PAGE->requires->js_call_amd('local_stories/modal', 'init');
+        $PAGE->requires->js_call_amd('local_stories/stories', 'init');
+    }
+
+    $template_context = [
+        'cancreate' => $can_create,
+        'stories' => array_values($stories)
+    ];
+
+    return $renderer->render_from_template('local_stories/navbar', $template_context);
 }
 
 function local_stories_before_footer() {
     global $OUTPUT;
-    // Выводим модалки
-    echo $OUTPUT->render_from_template('local_stories/create_modal', []);
-    echo $OUTPUT->render_from_template('local_stories/view_modal', []);
+    $context = \core\context\system::instance();
+
+    // Модальное окно просмотра
+    if (has_capability('local/stories:view', $context)) {
+        echo $OUTPUT->render_from_template('local_stories/view_modal', []);
+    }
+
+    // Модальное окно создания
+    if (has_capability('local/stories:create', $context)) {
+        echo $OUTPUT->render_from_template('local_stories/create_modal', []);
+    }
 }
 
 /**

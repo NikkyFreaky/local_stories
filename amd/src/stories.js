@@ -207,6 +207,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           updateTextBtnState();
           updateAddBtnState();
           updateBgBtnState();
+          updatePublishBtnState();
         } else if (file.type.startsWith('video/')) {
           if (currentVideoUrl) {
             URL.revokeObjectURL(currentVideoUrl);
@@ -242,6 +243,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
             updateTextBtnState();
             updateAddBtnState();
             updateBgBtnState();
+            updatePublishBtnState();
           };
         }
         previewContainer.show();
@@ -258,6 +260,8 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         if (file) {
           showPreview(file);
         }
+        // Сброс значения, чтобы повторный выбор того же файла срабатывал
+        fileInput.val('');
       });
 
       dropzone.on('dragenter dragover', function (e) {
@@ -371,6 +375,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           renderBgPalette();
           updateSlidesPanel();
           updateTextBtnState();
+          updatePublishBtnState();
         });
 
       modal.on('click', '.stories-editor__bg-color', function () {
@@ -402,6 +407,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         }
         updateSlidesPanel();
         updateTextBtnState();
+        updatePublishBtnState();
       });
 
       modal.on('click', '.stories-editor__bg-back', function () {
@@ -452,6 +458,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
             modal
               .find('.stories-editor__toolbar')
               .removeClass('stories-editor__toolbar--bg-open');
+            updatePublishBtnState();
           }
         });
 
@@ -520,6 +527,10 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           color: '#000',
           size: 32,
           align: 'center',
+          fontFamily: 'Arial',
+          bold: false,
+          italic: false,
+          underline: false,
         };
       }
 
@@ -553,6 +564,10 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
               color: block.color,
               fontSize: block.size + 'px',
               textAlign: block.align,
+              fontFamily: block.fontFamily || 'Arial',
+              fontWeight: block.bold ? 'bold' : 'normal',
+              fontStyle: block.italic ? 'italic' : 'normal',
+              textDecoration: block.underline ? 'underline' : 'none',
             })
             .text(block.text)
             .prepend(
@@ -631,7 +646,20 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
              */
             function saveEdit() {
               block.text = $textarea.val();
+              // Сохраняем стили из панели
+              block.fontFamily =
+                textPanel.find('.stories-editor__text-font').val() || 'Arial';
+              block.bold = !!textPanel
+                .find('.stories-editor__btn-style[data-style="bold"]')
+                .hasClass('active');
+              block.italic = !!textPanel
+                .find('.stories-editor__btn-style[data-style="italic"]')
+                .hasClass('active');
+              block.underline = !!textPanel
+                .find('.stories-editor__btn-style[data-style="underline"]')
+                .hasClass('active');
               renderTextBlocks();
+              syncPanelWithBlock();
               selectTextBlockWithPanel(block.id);
             }
             $textarea.on('blur', saveEdit);
@@ -656,6 +684,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         list.empty();
         if (slides.length === 0) {
           panel.hide();
+          updatePublishBtnState();
           return;
         }
         slides.forEach((slide, idx) => {
@@ -676,6 +705,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
               if (!hasContent(currentSlideObj)) {
                 // Если текущий слайд пустой - удаляем его
                 slides.splice(currentSlide, 1);
+                updatePublishBtnState();
                 // Корректируем индекс, если удаляемый слайд был перед целевым
                 if (currentSlide < idx) {
                   idx--;
@@ -736,10 +766,17 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           dropzone.hide();
         }
         if (slide.media && slide.mediaType) {
+          const mediaSrc =
+            slide.media instanceof File
+              ? URL.createObjectURL(slide.media)
+              : slide.media;
+
           if (slide.mediaType === 'image') {
-            imgPreview.attr('src', slide.media).show();
+            currentImageUrl = mediaSrc;
+            imgPreview.attr('src', mediaSrc).show();
           } else if (slide.mediaType === 'video') {
-            videoPreview.attr('src', slide.media).show();
+            currentVideoUrl = mediaSrc;
+            videoPreview.attr('src', mediaSrc).show();
           }
           previewContainer.show();
           dropzone.hide();
@@ -756,6 +793,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         updateTextBtnState();
         setTextPanelVisible(false);
         updateAddBtnState();
+        updatePublishBtnState();
       }
 
       // --- Кастомный confirm ---
@@ -851,100 +889,67 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
       }
 
       // --- Обработчики панели ---
-      /**
-       * Обработка выбора размера
-       */
-      textPanel.on('change', '.stories-editor__text-size', function () {
-        applyPanelToBlock();
+      const fontSelect = textPanel.find('.stories-editor__text-font');
+      const styleBtns = textPanel.find('.stories-editor__btn-style');
+
+      fontSelect.on('change', function () {
+        const block = getSelectedTextBlock();
+        if (block) {
+          block.fontFamily = $(this).val();
+          renderTextBlocks();
+          syncPanelWithBlock();
+        }
       });
-      /**
-       * Обработка выбора цвета
-       */
-      textPanel.on('click', '.stories-editor__text-colors button', function () {
-        textPanel
-          .find('.stories-editor__text-colors button')
-          .removeClass('active');
-        $(this).addClass('active');
-        applyPanelToBlock();
+
+      styleBtns.on('click', function () {
+        const style = $(this).data('style');
+        const block = getSelectedTextBlock();
+        if (block) {
+          block[style] = !block[style];
+          renderTextBlocks();
+          syncPanelWithBlock();
+        }
       });
+
       /**
-       * Обработка выбора выравнивания
+       * Возвращает выделенный текстовый блок или null
        */
-      textPanel.on('click', '.stories-editor__text-align button', function () {
-        textPanel
-          .find('.stories-editor__text-align button')
-          .removeClass('active');
-        $(this).addClass('active');
-        applyPanelToBlock();
-      });
+      function getSelectedTextBlock() {
+        const id = canvas.find('.stories-text-block.selected').data('id');
+        const slide = slides[currentSlide];
+        if (!slide || !id) {
+          return null;
+        }
+        return slide.texts.find((t) => t.id === id);
+      }
 
       /**
        * Синхронизирует значения панели с выделенным блоком
        */
       function syncPanelWithBlock() {
-        const slide = slides[currentSlide];
-        const id = canvas.find('.stories-text-block.selected').data('id');
-        if (!id) {
-          return;
-        }
-        const block = slide.texts.find((t) => t.id === id);
+        const block = getSelectedTextBlock();
         if (!block) {
           return;
         }
+        // Синхронизируем select шрифта
+        fontSelect.val(block.fontFamily || 'Arial');
+        // Синхронизируем кнопки B/I/U
+        styleBtns.each(function () {
+          const style = $(this).data('style');
+          $(this).toggleClass('active', !!block[style]);
+        });
+        // ... существующая синхронизация размера, цвета, выравнивания ...
         textPanel.find('.stories-editor__text-size').val(block.size);
         textPanel
           .find('.stories-editor__text-colors button')
-          .removeClass('active');
-        textPanel
-          .find(
-            '.stories-editor__text-colors button[data-color="' +
-              block.color +
-              '"]'
-          )
+          .removeClass('active')
+          .filter('[data-color="' + block.color + '"]')
           .addClass('active');
         textPanel
           .find('.stories-editor__text-align button')
-          .removeClass('active');
-        textPanel
-          .find(
-            '.stories-editor__text-align button[data-align="' +
-              block.align +
-              '"]'
-          )
+          .removeClass('active')
+          .filter('[data-align="' + block.align + '"]')
           .addClass('active');
-      }
-
-      /**
-       * Применяет изменения из панели к выделенному блоку
-       */
-      function applyPanelToBlock() {
-        const slide = slides[currentSlide];
-        const id = canvas.find('.stories-text-block.selected').data('id');
-        if (!id) {
-          return;
-        }
-        const block = slide.texts.find((t) => t.id === id);
-        if (!block) {
-          return;
-        }
-        block.size = parseInt(
-          textPanel.find('.stories-editor__text-size').val(),
-          10
-        );
-        const colorBtn = textPanel.find(
-          '.stories-editor__text-colors button.active'
-        );
-        if (colorBtn.length) {
-          block.color = colorBtn.data('color');
-        }
-        const alignBtn = textPanel.find(
-          '.stories-editor__text-align button.active'
-        );
-        if (alignBtn.length) {
-          block.align = alignBtn.data('align');
-        }
-        renderTextBlocks();
-        selectTextBlockWithPanel(block.id);
       }
 
       /**
@@ -983,6 +988,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         slide.texts.push(block);
         renderTextBlocks();
         selectTextBlockWithPanel(block.id);
+        updatePublishBtnState();
       }
 
       // Клик по кнопке панели
@@ -1175,7 +1181,20 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
          */
         function saveEdit() {
           block.text = $textarea.val();
+          // Сохраняем стили из панели
+          block.fontFamily =
+            textPanel.find('.stories-editor__text-font').val() || 'Arial';
+          block.bold = !!textPanel
+            .find('.stories-editor__btn-style[data-style="bold"]')
+            .hasClass('active');
+          block.italic = !!textPanel
+            .find('.stories-editor__btn-style[data-style="italic"]')
+            .hasClass('active');
+          block.underline = !!textPanel
+            .find('.stories-editor__btn-style[data-style="underline"]')
+            .hasClass('active');
           renderTextBlocks();
+          syncPanelWithBlock();
           selectTextBlockWithPanel(block.id);
         }
         $textarea.on('blur', saveEdit);
@@ -1216,9 +1235,23 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         );
 
       // --- Публикация истории ---
+      const publishBtn = modal.find('[data-action="publish-story"]');
+      /**
+       * Обновляет состояние кнопки 'Опубликовать' в зависимости от наличия слайдов
+       */
+      function updatePublishBtnState() {
+        const disabled = !slides.length || !slides.some(hasContent);
+        publishBtn.prop('disabled', disabled);
+        publishBtn.attr(
+          'title',
+          disabled
+            ? 'Добавьте хотя бы один слайд, чтобы опубликовать историю'
+            : ''
+        );
+      }
+
       modal.find('[data-action="publish-story"]').on('click', function () {
         if (!slides.length || !slides.some(hasContent)) {
-          Notification.alert('Ошибка', 'Добавьте хотя бы один слайд');
           return;
         }
 
@@ -1341,6 +1374,13 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
             window.location.reload();
           });
       });
+
+      // После любого изменения слайдов вызывать updatePublishBtnState
+      // Например, после добавления/удаления слайда:
+      // В функции, где slides.push или slides.splice, добавить updatePublishBtnState();
+
+      // В init после инициализации состояния:
+      updatePublishBtnState();
     },
   };
 });

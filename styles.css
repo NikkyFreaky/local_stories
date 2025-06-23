@@ -54,6 +54,7 @@
   right: 0;
   bottom: 0;
 }
+
 .stories-confirm-modal__overlay {
   position: absolute;
   left: 0;
@@ -62,6 +63,7 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.35);
 }
+
 .stories-confirm-modal__dialog {
   position: absolute;
   left: 50%;
@@ -77,15 +79,18 @@
   flex-direction: column;
   align-items: center;
 }
+
 .stories-confirm-modal__text {
   margin-bottom: 24px;
   font-size: 1.1em;
   text-align: center;
 }
+
 .stories-confirm-modal__actions {
   display: flex;
   gap: 16px;
 }
+
 .stories-confirm-modal__btn {
   min-width: 80px;
   padding: 8px 18px;
@@ -97,12 +102,15 @@
   color: #fff;
   transition: background 0.2s;
 }
+
 .stories-confirm-modal__btn--ok {
   background: #007bff;
 }
+
 .stories-confirm-modal__btn--ok:hover {
   background: #0056b3;
 }
+
 .stories-confirm-modal__btn--cancel:hover {
   background: #666;
 }
@@ -199,6 +207,14 @@
         width: 100%;
         height: 100%;
         border-radius: 24px;
+        object-fit: fill;
+      }
+
+      .stories-editor__preview-video {
+        width: 100%;
+        height: 100%;
+        border-radius: 24px;
+        object-fit: fill;
       }
     }
 
@@ -224,6 +240,10 @@
           line-height: 24px;
 
           &:hover {
+            color: gray;
+          }
+
+          &:disabled {
             color: gray;
           }
 
@@ -422,18 +442,50 @@
               border-color: black;
             }
           }
+
+          .stories-editor__text-font {
+            border: 1px solid gray;
+            border-radius: 8px;
+
+            &:hover {
+              border-color: black;
+            }
+          }
+        }
+
+        .stories-editor__text-style {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 12px;
+
+          .stories-editor__btn-style {
+            padding: 0;
+
+            border: none;
+            background-color: transparent;
+          }
+
+          .stories-editor__btn-style.active {
+            display: flex;
+            padding: 2px;
+
+            background-color: lightgray;
+            border-radius: 8px;
+          }
         }
 
         .stories-editor__text-align {
           width: fit-content;
-          padding: 0 4px;
+          padding: 2px;
           display: flex;
           gap: 4px;
 
           border-radius: 8px;
-          background-color: gray;
+          background-color: lightgrey;
 
           .stories-editor__btn-align {
+            display: flex;
+            align-items: center;
             padding: 2px 8px;
 
             border: none;
@@ -451,7 +503,7 @@
           }
 
           .stories-editor__btn-align.active {
-            background-color: lightgray;
+            background-color: white;
           }
         }
 
@@ -606,6 +658,11 @@
       &:active {
         border: 1px solid black;
       }
+
+      &:disabled {
+        color: gray;
+        background-color: lightgray;
+      }
     }
 
     .stories-editor__slides-panel {
@@ -618,6 +675,7 @@
         gap: 8px;
 
         .slide-btn-wrapper {
+          position: relative;
           &:hover {
             .stories-editor__slide-delete {
               opacity: 1;
@@ -651,8 +709,8 @@
 
           .stories-editor__slide-delete {
             position: absolute;
-            top: 750px;
-            left: 28px;
+            top: -8px;
+            right: -8px;
             z-index: 100;
 
             border: 1px solid red;
@@ -805,7 +863,7 @@
     .stories-view-modal__controls {
       position: absolute;
       top: -90px;
-      right: -505px;
+      right: -745px;
 
       .stories-view-modal__close {
         padding: 0;
