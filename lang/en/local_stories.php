@@ -23,9 +23,12 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-include __DIR__ . '/../ru/local_stories.php';
+declare(strict_types=1);
+
+require __DIR__ . '/../ru/local_stories.php';
 
 $string['pluginname'] = 'Stories';
+$string['privacy:metadata'] = 'The plugin "' . $string['pluginname'] . '" does not store personal data.';
 
 // Capabilities
 $string['stories:create'] = 'Create stories';

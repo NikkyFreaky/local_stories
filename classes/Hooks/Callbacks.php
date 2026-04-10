@@ -14,6 +14,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+declare(strict_types=1);
+
+namespace local_stories\Hooks;
+
+use core\hook\output\before_footer_html_generation;
+use core\context\system;
+
 /**
  * Hook callbacks for local_stories.
  *
@@ -21,15 +28,21 @@
  * @copyright 2026, Zlobin Nikita
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+final class Callbacks {
+    /**
+     * Add stories modals before footer HTML generation.
+     *
+     * @param before_footer_html_generation $hook
+     */
+    public static function beforeFooterHtmlGeneration(before_footer_html_generation $hook): void {
+        $context = system::instance();
 
-declare(strict_types=1);
+        if (\has_capability('local/stories:view', $context)) {
+            $hook->add_html($hook->renderer->render_from_template('local_stories/view_modal', []));
+        }
 
-defined('MOODLE_INTERNAL') || die();
-
-$callbacks = [
-    [
-        'hook' => \core\hook\output\before_footer_html_generation::class,
-        'callback' => [\local_stories\Hooks\Callbacks::class, 'beforeFooterHtmlGeneration'],
-        'priority' => 0,
-    ],
-];
+        if (\has_capability('local/stories:create', $context)) {
+            $hook->add_html($hook->renderer->render_from_template('local_stories/create_modal', []));
+        }
+    }
+}

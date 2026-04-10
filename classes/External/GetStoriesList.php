@@ -1,7 +1,7 @@
 <?php
-namespace local_stories\external;
+declare(strict_types=1);
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_stories\External;
 
 global $CFG;
 require_once($CFG->libdir . '/externallib.php');
@@ -12,23 +12,23 @@ use external_value;
 use external_single_structure;
 use external_multiple_structure;
 use context_system;
-use local_stories\stories;
+use local_stories\Stories;
 
-class get_stories_list extends external_api {
-    public static function execute_parameters() {
+class GetStoriesList extends external_api {
+    public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([]);
     }
 
-    public static function execute() {
+    public static function execute(): array {
         global $DB;
-        require_capability('local/stories:view', context_system::instance());
+        \require_capability('local/stories:view', context_system::instance());
         $now = time();
         $records = $DB->get_records_select(
             'local_stories',
             'status = :status AND deleted = 0 AND expires_at > :now',
             [
-                'status' => stories::STATUS_PUBLISHED,
-                'now' => $now
+                'status' => Stories::STATUS_PUBLISHED,
+                'now' => $now,
             ],
             'created_at DESC'
         );
@@ -42,14 +42,14 @@ class get_stories_list extends external_api {
                 'id' => $story->id,
                 'title' => $story->title,
                 'preview' => $preview,
-                'author' => $author ? fullname($author) : '',
-                'date' => userdate($story->created_at),
+                'author' => $author ? \fullname($author) : '',
+                'date' => \userdate($story->created_at),
             ];
         }
         return $result;
     }
 
-    public static function execute_returns() {
+    public static function execute_returns(): external_multiple_structure {
         return new external_multiple_structure(
             new external_single_structure([
                 'id' => new external_value(PARAM_INT, 'ID истории'),
@@ -60,4 +60,4 @@ class get_stories_list extends external_api {
             ])
         );
     }
-} 
+}

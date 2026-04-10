@@ -14,33 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace local_stories;
+declare(strict_types=1);
 
-use core\hook\output\before_footer_html_generation;
-use core\context\system;
+namespace local_stories\privacy;
 
 /**
- * Hook callbacks for local_stories.
+ * Privacy provider for local_stories.
  *
  * @package   local_stories
  * @copyright 2026, Zlobin Nikita
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class hook_callbacks {
+final class provider implements \core_privacy\local\metadata\null_provider {
     /**
-     * Add stories modals before footer HTML generation.
+     * Returns reason why this plugin stores no personal data.
      *
-     * @param before_footer_html_generation $hook
+     * @return string
      */
-    public static function before_footer_html_generation(before_footer_html_generation $hook): void {
-        $context = system::instance();
-
-        if (\has_capability('local/stories:view', $context)) {
-            $hook->add_html($hook->renderer->render_from_template('local_stories/view_modal', []));
-        }
-
-        if (\has_capability('local/stories:create', $context)) {
-            $hook->add_html($hook->renderer->render_from_template('local_stories/create_modal', []));
-        }
+    public static function get_reason(): string {
+        return 'privacy:metadata';
     }
 }

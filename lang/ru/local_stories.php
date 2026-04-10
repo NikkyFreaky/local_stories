@@ -23,4 +23,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+declare(strict_types=1);
+
 $string['pluginname'] = 'Истории';
+$string['privacy:metadata'] = 'Плагин "' . $string['pluginname'] . '" не хранит персональные данные.';

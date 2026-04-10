@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+declare(strict_types=1);
+
 defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
@@ -32,8 +34,8 @@ $capabilities = [
         'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ]
+            'manager' => CAP_ALLOW,
+        ],
     ],
 
     'local/stories:edit_own' => [
@@ -43,8 +45,8 @@ $capabilities = [
         'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ]
+            'manager' => CAP_ALLOW,
+        ],
     ],
 
     'local/stories:edit_any' => [
@@ -52,8 +54,8 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
-            'manager' => CAP_ALLOW
-        ]
+            'manager' => CAP_ALLOW,
+        ],
     ],
 
     'local/stories:delete_own' => [
@@ -63,8 +65,8 @@ $capabilities = [
         'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ]
+            'manager' => CAP_ALLOW,
+        ],
     ],
 
     'local/stories:delete_any' => [
@@ -72,8 +74,8 @@ $capabilities = [
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
-            'manager' => CAP_ALLOW
-        ]
+            'manager' => CAP_ALLOW,
+        ],
     ],
 
     'local/stories:publish' => [
@@ -83,15 +85,15 @@ $capabilities = [
         'archetypes' => [
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        ]
+            'manager' => CAP_ALLOW,
+        ],
     ],
 
     'local/stories:view' => [
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
-            'user' => CAP_ALLOW
-        ]
-    ]
-]; 
+            'user' => CAP_ALLOW,
+        ],
+    ],
+];
