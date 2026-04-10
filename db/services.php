@@ -3,47 +3,59 @@ declare(strict_types=1);
 
 defined('MOODLE_INTERNAL') || die();
 
+use local_stories\External\CreateStory;
+use local_stories\External\GetStoriesList;
+use local_stories\External\GetStory;
+use local_stories\External\PublishStory;
+use local_stories\External\UploadFile;
+use local_stories\Support\Lang;
+
 $functions = [
+    /** @see \local_stories\External\CreateStory::execute() */
     'local_stories_create_story' => [
-        'classname' => 'local_stories\External\CreateStory',
+        'classname' => CreateStory::class,
         'methodname' => 'execute',
-        'description' => 'Creates a new story',
+        'description' => Lang::get('wsf:create_story'),
         'type' => 'write',
         'ajax' => true,
         'loginrequired' => true,
         'capabilities' => 'local/stories:create',
     ],
+    /** @see \local_stories\External\PublishStory::execute() */
     'local_stories_publish_story' => [
-        'classname' => 'local_stories\External\PublishStory',
+        'classname' => PublishStory::class,
         'methodname' => 'execute',
-        'description' => 'Publishes a story',
+        'description' => Lang::get('wsf:publish_story'),
         'type' => 'write',
         'ajax' => true,
         'loginrequired' => true,
         'capabilities' => 'local/stories:publish',
     ],
+    /** @see \local_stories\External\UploadFile::execute() */
     'local_stories_upload_file' => [
-        'classname' => 'local_stories\External\UploadFile',
+        'classname' => UploadFile::class,
         'methodname' => 'execute',
-        'description' => 'Uploads a file for story',
+        'description' => Lang::get('wsf:upload_file'),
         'type' => 'write',
         'ajax' => true,
         'loginrequired' => true,
         'capabilities' => 'local/stories:create',
     ],
+    /** @see \local_stories\External\GetStory::execute() */
     'local_stories_get_story' => [
-        'classname' => 'local_stories\External\GetStory',
+        'classname' => GetStory::class,
         'methodname' => 'execute',
-        'description' => 'Get published story by id',
+        'description' => Lang::get('wsf:get_story'),
         'type' => 'read',
         'ajax' => true,
         'loginrequired' => true,
         'capabilities' => 'local/stories:view',
     ],
+    /** @see \local_stories\External\GetStoriesList::execute() */
     'local_stories_get_stories_list' => [
-        'classname' => 'local_stories\External\GetStoriesList',
+        'classname' => GetStoriesList::class,
         'methodname' => 'execute',
-        'description' => 'Get list of published stories',
+        'description' => Lang::get('wsf:get_stories_list'),
         'type' => 'read',
         'ajax' => true,
         'loginrequired' => true,

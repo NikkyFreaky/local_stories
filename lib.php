@@ -56,9 +56,9 @@ function local_stories_render_navbar_output(\core_renderer $renderer): string {
     }
 
     $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
+    $PAGE->requires->js_call_amd('local_stories/modal', 'init');
 
     if ($can_create) {
-        $PAGE->requires->js_call_amd('local_stories/modal', 'init');
         $PAGE->requires->js_call_amd('local_stories/stories', 'init');
     }
 

@@ -2,59 +2,55 @@
     <div class="modal-dialog stories-modal__dialog" role="document">
         <div class="modal-content stories-modal__content">
             <div class="modal-header stories-modal__header">
-                <h5 class="stories-modal__title" id="storiesModalLabel">Создание истории</h5>
-                <button type="button" class="stories-modal__close btn-close" data-action="close-modal" aria-label="Закрыть">
+                <h5 class="stories-modal__title" id="storiesModalLabel">{{#str}}modal:create_title, local_stories{{/str}}</h5>
+                <button type="button" class="stories-modal__close btn-close" data-action="close-modal" aria-label="{{#str}}closebuttontitle, core{{/str}}">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
-            <div class="modal-body stories-modal__body">
-                <!-- Левая часть: предпросмотр и загрузка файла -->
+            <div class="modal-body stories-modal__body" data-region="stories-create-body">
                 <div class="stories-editor__canvas">
                     <div class="stories-editor__dropzone">
                         <div class="stories-editor__dropzone-icon">
                             <i class="fa fa-upload" aria-hidden="true"></i>
                         </div>
-                        <div class="stories-editor__dropzone-text">
-                            Перетащите сюда фото или видео
-                        </div>
+                        <div class="stories-editor__dropzone-text">{{#str}}modal:dropzone_text, local_stories{{/str}}</div>
                         <label class="stories-editor__file-btn">
                             <input type="file" class="stories-editor__file-input" data-action="select-file" accept="image/*,video/*" autocomplete="off" />
                         </label>
                     </div>
                     <div class="stories-editor__preview-container">
-                        <img class="stories-editor__preview-image" alt="Preview">
+                        <img class="stories-editor__preview-image" alt="{{#str}}modal:preview_alt, local_stories{{/str}}">
                         <video class="stories-editor__preview-video" controls></video>
                     </div>
                 </div>
-                <!-- Правая часть: инструменты -->
                 <div class="stories-editor__toolbar">
                     <div class="stories-editor__toolbar-btns">
-                        <button type="button" class="stories-editor__tool-btn stories-editor__tool-text" data-action="add-text" disabled title="Добавьте хотя бы один слайд, чтобы добавить текст">
+                        <button type="button" class="stories-editor__tool-btn stories-editor__tool-text" data-action="add-text" disabled title="{{#str}}modal:text_disabled_title, local_stories{{/str}}">
                             <i class="fa fa-font me-2"></i>
-                            <span class="stories-editor__tool-label">Текст</span>
+                            <span class="stories-editor__tool-label">{{#str}}modal:text, local_stories{{/str}}</span>
                         </button>
                         <button type="button" class="stories-editor__tool-btn stories-editor__tool-bg" data-action="set-bg">
                             <i class="fa fa-image me-2"></i>
-                            <span class="stories-editor__tool-label">Фон</span>
+                            <span class="stories-editor__tool-label">{{#str}}modal:background, local_stories{{/str}}</span>
                         </button>
                     </div>
                     <div class="stories-editor__bg-panel">
                         <div class="stories-editor__bg-container">
-                            <button type="button" class="stories-editor__bg-back">&larr;</button>
-                            <div class="stories-editor__bg-title">Фон</div>
+                            <button type="button" class="stories-editor__bg-back" aria-label="{{#str}}modal:back, local_stories{{/str}}">&larr;</button>
+                            <div class="stories-editor__bg-title">{{#str}}modal:background, local_stories{{/str}}</div>
                         </div>
-                        <div class="stories-editor__bg-label">Цвет</div>
+                        <div class="stories-editor__bg-label">{{#str}}modal:color, local_stories{{/str}}</div>
                         <div class="stories-editor__bg-palette"></div>
                     </div>
                     <div class="stories-editor__text-panel">
                         <div class="stories-editor__text-container">
-                            <button type="button" class="stories-editor__text-back">&larr;</button>
-                            <div class="stories-editor__text-title">Текст</div>
-                        </div>                       
-                        <button type="button" class="stories-editor__text-add" data-action="add-text-block">+ Добавить текст</button>
+                            <button type="button" class="stories-editor__text-back" aria-label="{{#str}}modal:back, local_stories{{/str}}">&larr;</button>
+                            <div class="stories-editor__text-title">{{#str}}modal:text, local_stories{{/str}}</div>
+                        </div>
+                        <button type="button" class="stories-editor__text-add" data-action="add-text-block">{{#str}}modal:add_text, local_stories{{/str}}</button>
                         <div class="stories-editor__text-controls">
                             <label>
-                                Размер:
+                                {{#str}}modal:font_size, local_stories{{/str}}
                                 <select class="stories-editor__text-size" autocomplete="off">
                                     <option value="24">24</option>
                                     <option value="32" selected>32</option>
@@ -63,7 +59,7 @@
                                 </select>
                             </label>
                             <label>
-                                Шрифт:
+                                {{#str}}modal:font_family, local_stories{{/str}}
                                 <select class="stories-editor__text-font" autocomplete="off">
                                     <option value="Arial" selected>Arial</option>
                                     <option value="Times New Roman">Times New Roman</option>
@@ -73,26 +69,14 @@
                                 </select>
                             </label>
                             <div class="stories-editor__text-style">
-                                <button class="stories-editor__btn-style" type="button" data-style="bold" title="Жирный">
-                                    <svg width="20" height="20" viewBox="0 0 20 20"><text x="3" y="16" font-family="Arial" font-size="16" font-weight="bold">B</text></svg>
-                                </button>
-                                <button class="stories-editor__btn-style" type="button" data-style="italic" title="Курсив">
-                                    <svg width="20" height="20" viewBox="0 0 20 20"><text x="6" y="16" font-family="Arial" font-size="16" font-style="italic">I</text></svg>
-                                </button>
-                                <button class="stories-editor__btn-style" type="button" data-style="underline" title="Подчеркнутый">
-                                    <svg width="20" height="20" viewBox="0 0 20 20"><text x="3" y="16" font-family="Arial" font-size="16" text-decoration="underline">U</text><line x1="3" y1="18" x2="17" y2="18" stroke="black" stroke-width="2"/></svg>
-                                </button>
+                                <button class="stories-editor__btn-style" type="button" data-style="bold" title="{{#str}}modal:style_bold, local_stories{{/str}}"><svg width="20" height="20" viewBox="0 0 20 20"><text x="3" y="16" font-family="Arial" font-size="16" font-weight="bold">B</text></svg></button>
+                                <button class="stories-editor__btn-style" type="button" data-style="italic" title="{{#str}}modal:style_italic, local_stories{{/str}}"><svg width="20" height="20" viewBox="0 0 20 20"><text x="6" y="16" font-family="Arial" font-size="16" font-style="italic">I</text></svg></button>
+                                <button class="stories-editor__btn-style" type="button" data-style="underline" title="{{#str}}modal:style_underline, local_stories{{/str}}"><svg width="20" height="20" viewBox="0 0 20 20"><text x="3" y="16" font-family="Arial" font-size="16" text-decoration="underline">U</text><line x1="3" y1="18" x2="17" y2="18" stroke="black" stroke-width="2"/></svg></button>
                             </div>
                             <div class="stories-editor__text-align">
-                                <button class="stories-editor__btn-align" type="button" data-align="left" title="Выровнять влево">
-                                    <svg width="20" height="20" viewBox="0 0 20 20"><rect x="3" y="5" width="14" height="2" fill="#333"/><rect x="3" y="9" width="8" height="2" fill="#333"/><rect x="3" y="13" width="12" height="2" fill="#333"/></svg>
-                                </button>
-                                <button class="stories-editor__btn-align" type="button" data-align="center" title="Выровнять по центру">
-                                    <svg width="20" height="20" viewBox="0 0 20 20"><rect x="4" y="5" width="12" height="2" fill="#333"/><rect x="6" y="9" width="8" height="2" fill="#333"/><rect x="5" y="13" width="10" height="2" fill="#333"/></svg>
-                                </button>
-                                <button class="stories-editor__btn-align" type="button" data-align="right" title="Выровнять вправо">
-                                    <svg width="20" height="20" viewBox="0 0 20 20"><rect x="3" y="5" width="14" height="2" fill="#333"/><rect x="9" y="9" width="8" height="2" fill="#333"/><rect x="5" y="13" width="12" height="2" fill="#333"/></svg>
-                                </button>
+                                <button class="stories-editor__btn-align" type="button" data-align="left" title="{{#str}}modal:align_left, local_stories{{/str}}"><svg width="20" height="20" viewBox="0 0 20 20"><rect x="3" y="5" width="14" height="2" fill="#333"/><rect x="3" y="9" width="8" height="2" fill="#333"/><rect x="3" y="13" width="12" height="2" fill="#333"/></svg></button>
+                                <button class="stories-editor__btn-align" type="button" data-align="center" title="{{#str}}modal:align_center, local_stories{{/str}}"><svg width="20" height="20" viewBox="0 0 20 20"><rect x="4" y="5" width="12" height="2" fill="#333"/><rect x="6" y="9" width="8" height="2" fill="#333"/><rect x="5" y="13" width="10" height="2" fill="#333"/></svg></button>
+                                <button class="stories-editor__btn-align" type="button" data-align="right" title="{{#str}}modal:align_right, local_stories{{/str}}"><svg width="20" height="20" viewBox="0 0 20 20"><rect x="3" y="5" width="14" height="2" fill="#333"/><rect x="9" y="9" width="8" height="2" fill="#333"/><rect x="5" y="13" width="12" height="2" fill="#333"/></svg></button>
                             </div>
                             <div class="stories-editor__text-colors">
                                 <button class="stories-editor__text-color" type="button" data-color="#fff" style="background:#fff;"></button>
@@ -111,23 +95,22 @@
                 </div>
             </div>
             <div class="modal-footer stories-modal__footer">
-                <div class="stories-editor__slides-panel" style="display:none;">
+                <div class="stories-editor__slides-panel" data-region="stories-slides-panel">
                     <div class="stories-editor__slides-list"></div>
-                    <button type="button" class="stories-editor__slide-add">+</button>
+                    <button type="button" class="stories-editor__slide-add" aria-label="{{#str}}modal:add_slide, local_stories{{/str}}">+</button>
                 </div>
-                <button type="button" class="btn btn-primary" data-action="publish-story" disabled title="Добавьте хотя бы один слайд, чтобы опубликовать историю">Опубликовать</button>
+                <button type="button" class="btn btn-primary" data-action="publish-story" disabled title="{{#str}}modal:publish_disabled_title, local_stories{{/str}}">{{#str}}modal:publish, local_stories{{/str}}</button>
             </div>
         </div>
     </div>
 </div>
-<!-- Кастомное модальное окно подтверждения -->
-<div class="stories-confirm-modal" style="display:none;">
+<div class="stories-confirm-modal">
     <div class="stories-confirm-modal__overlay"></div>
     <div class="stories-confirm-modal__dialog">
         <div class="stories-confirm-modal__text"></div>
         <div class="stories-confirm-modal__actions">
-            <button type="button" class="stories-confirm-modal__btn stories-confirm-modal__btn--ok">Да</button>
-            <button type="button" class="stories-confirm-modal__btn stories-confirm-modal__btn--cancel">Нет</button>
+            <button type="button" class="stories-confirm-modal__btn stories-confirm-modal__btn--ok">{{#str}}modal:yes, local_stories{{/str}}</button>
+            <button type="button" class="stories-confirm-modal__btn stories-confirm-modal__btn--cancel">{{#str}}modal:no, local_stories{{/str}}</button>
         </div>
     </div>
-</div> 
+</div>

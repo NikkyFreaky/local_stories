@@ -1,10 +1,7 @@
 /* eslint-disable linebreak-style */
-define(['jquery', 'core/ajax', 'core/notification'], function (
-  $,
-  Ajax,
-  Notification
-) {
-  'use strict';
+import $ from 'jquery';
+import Ajax from 'core/ajax';
+import Notification from 'core/notification';
 
   /**
    * Загружает историю по id через AJAX.
@@ -141,13 +138,16 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         typeof storyOrId === 'number' ||
         (typeof storyOrId === 'string' && storyOrId.match(/^\d+$/))
       ) {
-        this.$modal.addClass('show');
-        $('body').addClass('modal-open');
-        // Добавляем стандартный Bootstrap backdrop
-        if ($('.modal-backdrop').length === 0) {
-          $('<div class="modal-backdrop fade show"></div>').appendTo(
-            document.body
-          );
+        if (window.StoriesViewModal && typeof window.StoriesViewModal.show === 'function') {
+          window.StoriesViewModal.show();
+        } else {
+          this.$modal.addClass('show').css('display', 'block');
+          $('body').addClass('modal-open');
+          if ($('.modal-backdrop').length === 0) {
+            $('<div class="modal-backdrop fade show"></div>').appendTo(
+              document.body
+            );
+          }
         }
         this.$modal.find('.stories-view-modal__body').addClass('loading');
         loadStoryById(Number(storyOrId))
@@ -182,8 +182,17 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         );
       });
       // Показываем модальное окно
-      this.$modal.addClass('show');
-      $('body').addClass('modal-open');
+      if (window.StoriesViewModal && typeof window.StoriesViewModal.show === 'function') {
+        window.StoriesViewModal.show();
+      } else {
+        this.$modal.addClass('show').css('display', 'block');
+        $('body').addClass('modal-open');
+        if ($('.modal-backdrop').length === 0) {
+          $('<div class="modal-backdrop fade show"></div>').appendTo(
+            document.body
+          );
+        }
+      }
       // Загружаем первый слайд
       this.loadSlide(0);
       // Обновляем состояние стрелок историй
@@ -224,10 +233,13 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
     }
 
     hide() {
-      this.$modal.removeClass('show');
-      $('body').removeClass('modal-open');
-      // Удаляем backdrop
-      $('.modal-backdrop').remove();
+      if (window.StoriesViewModal && typeof window.StoriesViewModal.hide === 'function') {
+        window.StoriesViewModal.hide();
+      } else {
+        this.$modal.removeClass('show').css('display', '');
+        $('body').removeClass('modal-open');
+        $('.modal-backdrop').remove();
+      }
       this.stopTimer();
       this.$viewer.css('background-color', '');
 
@@ -423,8 +435,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
     }
   }
 
-  return {
-    init: function () {
+export const init = () => {
       if (typeof $ === 'undefined') {
         throw new Error('jQuery is required for StoriesViewer');
       }
@@ -446,7 +457,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         }
         const $createBtn = $nav.find('.stories-create');
         stories.forEach(function (story, idx) {
-          const $item = $('<div>')
+          const $item = $('<button type="button">')
             .addClass('stories-btn')
             .attr('title', story.title)
             .on('click', function () {
@@ -466,6 +477,4 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
           $createBtn.after($item);
         });
       });
-    },
-  };
-});
+};

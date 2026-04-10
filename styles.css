@@ -1,4 +1,8 @@
 .stories-nav {
+  max-width: 500px;
+  width: 100%;
+  overflow-x: auto;
+
   display: flex;
   align-items: center;
   gap: 8px;
@@ -27,6 +31,8 @@
     align-items: center;
     justify-content: center;
 
+    padding: 0;
+    background-color: transparent;
     border: 1px solid black;
     border-radius: 50%;
 
@@ -667,7 +673,7 @@
 
     .stories-editor__slides-panel {
       margin: 0;
-      display: flex;
+      display: none;
       gap: 8px;
 
       .stories-editor__slides-list {
@@ -803,7 +809,7 @@
       }
 
       .stories-view-modal__progress-item::after {
-        content: '';
+        content: "";
         display: block;
         height: 100%;
         width: 0;
