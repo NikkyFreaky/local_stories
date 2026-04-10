@@ -17,7 +17,7 @@
 /**
  *
  * @package   local_stories
- * @copyright 2025, Zlobin Nikita
+ * @copyright 2026, Zlobin Nikita
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -68,21 +68,6 @@ function local_stories_render_navbar_output(\core_renderer $renderer) {
     return $renderer->render_from_template('local_stories/navbar', $template_context);
 }
 
-function local_stories_before_footer() {
-    global $OUTPUT;
-    $context = \core\context\system::instance();
-
-    // Модальное окно просмотра
-    if (has_capability('local/stories:view', $context)) {
-        echo $OUTPUT->render_from_template('local_stories/view_modal', []);
-    }
-
-    // Модальное окно создания
-    if (has_capability('local/stories:create', $context)) {
-        echo $OUTPUT->render_from_template('local_stories/create_modal', []);
-    }
-}
-
 /**
  * Serves the files from the local_stories file areas
  *
@@ -127,4 +112,4 @@ function local_stories_pluginfile($course, $cm, $context, $filearea, $args, $for
 
     // Send the file back
     send_stored_file($file, 86400, 0, $forcedownload, $options);
-} 
+}
