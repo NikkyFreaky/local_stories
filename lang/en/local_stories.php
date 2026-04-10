@@ -23,6 +23,6 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-include __DIR__ . '/../ru/local_stories.php';
+declare(strict_types=1);
 
-$string['pluginname'] = 'Stories';
+require __DIR__ . '/../ru/local_stories.php';

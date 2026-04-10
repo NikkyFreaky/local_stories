@@ -14,24 +14,24 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-/**
- * Version metadata for the local_stories plugin.
- *
- * @package   local_stories
- * @copyright 2025, Zlobin Nikita
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-
 declare(strict_types=1);
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_stories\privacy;
 
-/** @var stdClass $plugin */
-
-$plugin->component = 'local_stories';
-$plugin->version   = 2025_04_17_04;
-$plugin->requires  = 2024100700; // Moodle 4.5.0
-$plugin->dependencies = [
-    'local_patterns_tools' => 2026_03_30_00,
-];
-$plugin->release   = 'v0.1.1';
+/**
+ * Privacy provider for local_stories.
+ *
+ * @package   local_stories
+ * @copyright 2026, Zlobin Nikita
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+final class provider implements \core_privacy\local\metadata\null_provider {
+    /**
+     * Returns reason why this plugin stores no personal data.
+     *
+     * @return string
+     */
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}
