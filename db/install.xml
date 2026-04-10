@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/stories/db" VERSION="20240504" COMMENT="XMLDB file for Stories plugin"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
+>
+    <TABLES>
+        <TABLE NAME="local_stories" COMMENT="Stores stories information">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="course_id" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="title" TYPE="char" LENGTH="255" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="created_at" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="expires_at" TYPE="int" LENGTH="10" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="status" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0 - draft, 1 - published"/>
+                <FIELD NAME="deleted" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="user_id" TYPE="foreign" FIELDS="user_id" REFTABLE="user" REFFIELDS="id"/>
+                <KEY NAME="course_id" TYPE="foreign" FIELDS="course_id" REFTABLE="course" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="status" UNIQUE="false" FIELDS="status"/>
+                <INDEX NAME="deleted" UNIQUE="false" FIELDS="deleted"/>
+            </INDEXES>
+        </TABLE>
+
+        <TABLE NAME="local_stories_slides" COMMENT="Stores slides information for stories">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="story_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="position" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="5000" SEQUENCE="false" COMMENT="Duration in milliseconds"/>
+                <FIELD NAME="background" TYPE="char" LENGTH="32" NOTNULL="false" SEQUENCE="false" COMMENT="Background color in HEX"/>
+                <FIELD NAME="media_type" TYPE="char" LENGTH="10" NOTNULL="false" SEQUENCE="false" COMMENT="image or video"/>
+                <FIELD NAME="media_url" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
+                <FIELD NAME="texts" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="JSON array of text objects"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="story_id" TYPE="foreign" FIELDS="story_id" REFTABLE="local_stories" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="position" UNIQUE="false" FIELDS="position"/>
+            </INDEXES>
+        </TABLE>
+
+        <TABLE NAME="local_stories_views" COMMENT="Stores story views information">
+            <FIELDS>
+                <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+                <FIELD NAME="story_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="user_id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
+                <FIELD NAME="viewed_at" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="last_slide" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+                <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
+            </FIELDS>
+            <KEYS>
+                <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+                <KEY NAME="story_id" TYPE="foreign" FIELDS="story_id" REFTABLE="local_stories" REFFIELDS="id"/>
+                <KEY NAME="user_id" TYPE="foreign" FIELDS="user_id" REFTABLE="user" REFFIELDS="id"/>
+            </KEYS>
+            <INDEXES>
+                <INDEX NAME="viewed_at" UNIQUE="false" FIELDS="viewed_at"/>
+            </INDEXES>
+        </TABLE>
+    </TABLES>
+</XMLDB> 

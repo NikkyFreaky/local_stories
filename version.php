@@ -25,6 +25,6 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_stories';
-$plugin->version   = 2025041700;
+$plugin->version   = 2025041702;
 $plugin->requires  = 2024100700; // Moodle 4.5.0
 $plugin->release = 'v0.1.0';

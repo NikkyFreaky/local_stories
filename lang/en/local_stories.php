@@ -26,3 +26,28 @@
 include __DIR__ . '/../ru/local_stories.php';
 
 $string['pluginname'] = 'Stories';
+
+// Capabilities
+$string['stories:create'] = 'Create stories';
+$string['stories:edit_own'] = 'Edit own stories';
+$string['stories:edit_any'] = 'Edit any stories';
+$string['stories:delete_own'] = 'Delete own stories';
+$string['stories:delete_any'] = 'Delete any stories';
+$string['stories:publish'] = 'Publish stories';
+$string['stories:view'] = 'View stories';
+
+// Errors
+$string['erroremptytitle'] = 'Story title cannot be empty';
+$string['errornotfound'] = 'Story not found';
+$string['errornopermission'] = 'You do not have permission to perform this action';
+$string['erroralreadypublished'] = 'Story is already published';
+$string['erroralreadyunpublished'] = 'Story is already unpublished';
+$string['errorinvalidstatus'] = 'Invalid story status';
+$string['error:invalidfiletype'] = 'Invalid file type';
+$string['error:invalidfiledata'] = 'Invalid file data';
+$string['error:tempfile'] = 'Failed to create temporary file';
+$string['error:savefile'] = 'Failed to save file';
+
+// Status
+$string['status_draft'] = 'Draft';
+$string['status_published'] = 'Published';
