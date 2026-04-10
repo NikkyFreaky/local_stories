@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version metadata for the local_stories plugin.
+ * Hook callbacks for local_stories.
  *
  * @package   local_stories
- * @copyright 2025, Zlobin Nikita
+ * @copyright 2026, Zlobin Nikita
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,12 +26,15 @@ declare(strict_types=1);
 
 defined('MOODLE_INTERNAL') || die();
 
-/** @var stdClass $plugin */
-
-$plugin->component = 'local_stories';
-$plugin->version   = 2025_04_17_04;
-$plugin->requires  = 2024100700; // Moodle 4.5.0
-$plugin->dependencies = [
-    'local_patterns_tools' => 2026_03_30_00,
+$callbacks = [
+    [
+        'hook' => \core\hook\output\before_standard_top_of_body_html_generation::class,
+        'callback' => [\local_stories\Hooks\Callbacks::class, 'beforeStandardTopOfBodyHtmlGeneration'],
+        'priority' => 0,
+    ],
+    [
+        'hook' => \core\hook\output\before_footer_html_generation::class,
+        'callback' => [\local_stories\Hooks\Callbacks::class, 'beforeFooterHtmlGeneration'],
+        'priority' => 0,
+    ],
 ];
-$plugin->release   = 'v0.1.1';

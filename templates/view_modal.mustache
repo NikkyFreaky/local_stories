@@ -1,0 +1,34 @@
+<div id="stories-view-modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="storiesViewModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog stories-view-modal__dialog" role="document">
+        <div class="modal-content stories-view-modal__content">
+            <h2 id="storiesViewModalLabel" class="sr-only">{{#str}}modal:view_title, local_stories{{/str}}</h2>
+            <div class="stories-view-modal__progress">
+                <div class="stories-view-modal__progress-items"></div>
+            </div>
+            <div class="stories-view-modal__body">
+                <div class="stories-view-modal__preview stories-view-modal__preview--prev"></div>
+                <div class="stories-view-modal__viewer">
+                    <div class="stories-view-modal__media-container">
+                        <img class="stories-view-modal__image" alt="">
+                        <video class="stories-view-modal__video" playsinline></video>
+                    </div>
+                    <div class="stories-view-modal__texts"></div>
+                </div>
+                <div class="stories-view-modal__preview stories-view-modal__preview--next"></div>
+
+                <button type="button" class="stories-view-modal__nav-story stories-view-modal__nav-story--prev" data-action="prev-story" title="{{#str}}modal:previous_story, local_stories{{/str}}">
+                    <span aria-hidden="true">&larr;</span>
+                </button>
+                <button type="button" class="stories-view-modal__nav-story stories-view-modal__nav-story--next" data-action="next-story" title="{{#str}}modal:next_story, local_stories{{/str}}">
+                    <span aria-hidden="true">&rarr;</span>
+                </button>
+
+                <div class="stories-view-modal__controls">
+                    <button type="button" class="stories-view-modal__close" data-action="close-modal" aria-label="{{#str}}closebuttontitle, core{{/str}}">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
