@@ -1,17 +1,16 @@
 <div class="stories-nav" data-region="stories-nav">
     {{#cancreate}}
-        <!-- Кнопка создания истории -->
-        <a href="#" class="stories-btn stories-create" data-action="open-stories-editor" aria-label="Создать историю">
+        <button type="button" class="stories-btn stories-create" data-action="open-stories-editor" aria-label="{{#str}}modal:create_title, local_stories{{/str}}">
             <i class="icon fa fa-plus" aria-hidden="true"></i>
-        </a>
+        </button>
     {{/cancreate}}
 
     {{#stories}}
-        <a href="#" class="stories-btn {{#seen}}stories-seen{{/seen}}{{^seen}}stories-unseen{{/seen}} me-2"
+        <button type="button" class="stories-btn {{#seen}}stories-seen{{/seen}}{{^seen}}stories-unseen{{/seen}} me-2"
            data-action="open-story"
            data-story-id="{{id}}"
-           aria-label="История {{id}}">
+           aria-label="{{#str}}modal:story_aria, local_stories{{/str}} {{id}}">
             <i class="icon fa fa-circle" aria-hidden="true"></i>
-        </a>
+        </button>
     {{/stories}}
-</div> 
+</div>

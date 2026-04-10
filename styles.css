@@ -1,4 +1,8 @@
 .stories-nav {
+  max-width: 500px;
+  width: 100%;
+  overflow-x: auto;
+
   display: flex;
   align-items: center;
   gap: 8px;
@@ -27,6 +31,8 @@
     align-items: center;
     justify-content: center;
 
+    padding: 0;
+    background-color: transparent;
     border: 1px solid black;
     border-radius: 50%;
 
@@ -129,6 +135,7 @@
   }
 
   .stories-modal__content {
+    padding: 0;
     width: 710px;
     height: 810px;
   }
@@ -635,6 +642,7 @@
   .stories-modal__footer {
     padding: 0 8px 8px 8px;
     justify-content: space-between;
+    flex-direction: row;
 
     border: none;
 
@@ -668,6 +676,7 @@
     .stories-editor__slides-panel {
       margin: 0;
       display: flex;
+      flex-direction: row;
       gap: 8px;
 
       .stories-editor__slides-list {
@@ -776,6 +785,7 @@
   }
 
   .stories-view-modal__content {
+    padding: 0;
     width: 400px;
     height: 740px;
     border-radius: 24px;
@@ -803,7 +813,7 @@
       }
 
       .stories-view-modal__progress-item::after {
-        content: '';
+        content: "";
         display: block;
         height: 100%;
         width: 0;
@@ -862,8 +872,8 @@
 
     .stories-view-modal__controls {
       position: absolute;
-      top: -90px;
-      right: -745px;
+      top: -50px;
+      left: 800px;
 
       .stories-view-modal__close {
         padding: 0;

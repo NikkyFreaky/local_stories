@@ -14,26 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+declare(strict_types=1);
+
 namespace local_stories;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
- * API для работы с историями
+ * API для работы с историями.
  *
  * @package    local_stories
- * @copyright  2024 Nikita Zlobin
+ * @copyright  2025 Nikita Zlobin
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class stories {
+class Stories {
     /** @var int Статус черновика */
-    const STATUS_DRAFT = 0;
-    
+    public const STATUS_DRAFT = 0;
+
     /** @var int Статус опубликованной истории */
-    const STATUS_PUBLISHED = 1;
+    public const STATUS_PUBLISHED = 1;
 
     /**
-     * Создает новую историю
+     * Создает новую историю.
      *
      * @param \stdClass $data Данные истории
      * @return int ID созданной истории
@@ -41,17 +41,14 @@ class stories {
     public static function create(\stdClass $data): int {
         global $DB, $USER;
 
-        // Проверяем права
-        if (!has_capability('local/stories:create', \context_system::instance())) {
+        if (!\has_capability('local/stories:create', \context_system::instance())) {
             throw new \moodle_exception('nopermissions', 'error', '', 'create story');
         }
 
-        // Валидация
         if (empty($data->title)) {
             throw new \moodle_exception('erroremptytitle', 'local_stories');
         }
 
-        // Подготовка данных
         $story = new \stdClass();
         $story->user_id = $USER->id;
         $story->course_id = $data->course_id ?? null;
@@ -63,33 +60,27 @@ class stories {
         $story->timecreated = time();
         $story->timemodified = $story->timecreated;
 
-        // Сохраняем историю
         return $DB->insert_record('local_stories', $story);
     }
 
     /**
-     * Публикует историю
+     * Публикует историю.
      *
      * @param int $storyid ID истории
-     * @return bool Результат операции
+     * @return bool
      */
     public static function publish(int $storyid): bool {
         global $DB, $USER;
 
-        // Проверяем права
-        if (!has_capability('local/stories:publish', \context_system::instance())) {
+        if (!\has_capability('local/stories:publish', \context_system::instance())) {
             throw new \moodle_exception('nopermissions', 'error', '', 'publish story');
         }
 
-        // Получаем историю
         $story = $DB->get_record('local_stories', ['id' => $storyid, 'deleted' => 0], '*', MUST_EXIST);
-
-        // Проверяем владельца
-        if ($story->user_id != $USER->id && !has_capability('local/stories:edit_any', \context_system::instance())) {
+        if ($story->user_id != $USER->id && !\has_capability('local/stories:edit_any', \context_system::instance())) {
             throw new \moodle_exception('nopermissions', 'error', '', 'publish story');
         }
 
-        // Обновляем статус
         $story->status = self::STATUS_PUBLISHED;
         $story->timemodified = time();
 
@@ -97,28 +88,23 @@ class stories {
     }
 
     /**
-     * Снимает историю с публикации
+     * Снимает историю с публикации.
      *
      * @param int $storyid ID истории
-     * @return bool Результат операции
+     * @return bool
      */
     public static function unpublish(int $storyid): bool {
         global $DB, $USER;
 
-        // Проверяем права
-        if (!has_capability('local/stories:publish', \context_system::instance())) {
+        if (!\has_capability('local/stories:publish', \context_system::instance())) {
             throw new \moodle_exception('nopermissions', 'error', '', 'unpublish story');
         }
 
-        // Получаем историю
         $story = $DB->get_record('local_stories', ['id' => $storyid, 'deleted' => 0], '*', MUST_EXIST);
-
-        // Проверяем владельца
-        if ($story->user_id != $USER->id && !has_capability('local/stories:edit_any', \context_system::instance())) {
+        if ($story->user_id != $USER->id && !\has_capability('local/stories:edit_any', \context_system::instance())) {
             throw new \moodle_exception('nopermissions', 'error', '', 'unpublish story');
         }
 
-        // Обновляем статус
         $story->status = self::STATUS_DRAFT;
         $story->timemodified = time();
 
@@ -126,37 +112,32 @@ class stories {
     }
 
     /**
-     * Получает список историй с фильтрацией
+     * Получает список историй с фильтрацией.
      *
-     * @param array $filters Фильтры
-     * @return array Список историй
+     * @param array $filters
+     * @return array
      */
     public static function get_list(array $filters = []): array {
-        global $DB, $USER;
+        global $DB;
 
-        // Базовые условия
         $conditions = ['deleted = 0'];
         $params = [];
 
-        // Фильтр по статусу
         if (isset($filters['status'])) {
             $conditions[] = 'status = :status';
             $params['status'] = $filters['status'];
         }
 
-        // Фильтр по курсу
         if (isset($filters['course_id'])) {
             $conditions[] = 'course_id = :course_id';
             $params['course_id'] = $filters['course_id'];
         }
 
-        // Фильтр по владельцу
         if (isset($filters['user_id'])) {
             $conditions[] = 'user_id = :user_id';
             $params['user_id'] = $filters['user_id'];
         }
 
-        // Фильтр по дате истечения
         if (isset($filters['active'])) {
             $now = time();
             if ($filters['active']) {
@@ -167,12 +148,9 @@ class stories {
             $params['now'] = $now;
         }
 
-        // Собираем SQL
         $sql = 'SELECT * FROM {local_stories} WHERE ' . implode(' AND ', $conditions);
-
-        // Добавляем сортировку
         $sql .= ' ORDER BY created_at DESC';
 
         return $DB->get_records_sql($sql, $params);
     }
-} 
+}

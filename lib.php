@@ -17,70 +17,22 @@
 /**
  *
  * @package   local_stories
- * @copyright 2025, Zlobin Nikita
+ * @copyright 2026, Zlobin Nikita
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+declare(strict_types=1);
+
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/local/stories/classes/stories.php');
+require_once($CFG->dirroot . '/local/stories/classes/Stories.php');
 
 /**
  * @param \core_renderer $renderer The page renderer.
  * @return string HTML for stories buttons.
  */
-function local_stories_render_navbar_output(\core_renderer $renderer) {
-    global $PAGE, $DB, $USER;
-    $context = \core\context\system::instance();
-
-    $can_view = has_capability('local/stories:view', $context);
-    $can_create = has_capability('local/stories:create', $context);
-
-    if (!$can_view) {
-        return '';
-    }
-
-    $stories = \local_stories\stories::get_list([
-        'status' => \local_stories\stories::STATUS_PUBLISHED,
-        'active' => true,
-    ]);
-
-    // Добавляем информацию о просмотре
-    foreach ($stories as &$story) {
-        $story->seen = $DB->record_exists('local_stories_views', [
-            'story_id' => $story->id,
-            'user_id' => $USER->id,
-        ]);
-    }
-
-    $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
-
-    if ($can_create) {
-        $PAGE->requires->js_call_amd('local_stories/modal', 'init');
-        $PAGE->requires->js_call_amd('local_stories/stories', 'init');
-    }
-
-    $template_context = [
-        'cancreate' => $can_create,
-        'stories' => array_values($stories)
-    ];
-
-    return $renderer->render_from_template('local_stories/navbar', $template_context);
-}
-
-function local_stories_before_footer() {
-    global $OUTPUT;
-    $context = \core\context\system::instance();
-
-    // Модальное окно просмотра
-    if (has_capability('local/stories:view', $context)) {
-        echo $OUTPUT->render_from_template('local_stories/view_modal', []);
-    }
-
-    // Модальное окно создания
-    if (has_capability('local/stories:create', $context)) {
-        echo $OUTPUT->render_from_template('local_stories/create_modal', []);
-    }
+function local_stories_render_navbar_output(\core_renderer $renderer): string {
+    return '';
 }
 
 /**
@@ -95,9 +47,9 @@ function local_stories_before_footer() {
  * @param array $options additional options affecting the file serving
  * @return bool false if the file not found, just send the file otherwise
  */
-function local_stories_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
+function local_stories_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     // Check the contextlevel is as expected
-    if ($context->contextlevel != CONTEXT_SYSTEM) {
+    if ($context->contextlevel !== CONTEXT_SYSTEM) {
         return false;
     }
 
@@ -127,4 +79,4 @@ function local_stories_pluginfile($course, $cm, $context, $filearea, $args, $for
 
     // Send the file back
     send_stored_file($file, 86400, 0, $forcedownload, $options);
-} 
+}
