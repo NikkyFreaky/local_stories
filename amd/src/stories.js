@@ -1,10 +1,7 @@
 /* eslint-disable linebreak-style */
-define(['jquery', 'core/ajax', 'core/notification'], function (
-  $,
-  Ajax,
-  Notification
-) {
-  'use strict';
+import $ from 'jquery';
+import Ajax from 'core/ajax';
+import Notification from 'core/notification';
 
   /**
    * Сохраняет историю
@@ -79,8 +76,7 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
     });
   }
 
-  return {
-    init: function () {
+export const init = () => {
       // Инициализируем модальное окно
       const modal = $('#stories-modal');
 
@@ -129,40 +125,11 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
         }
       }
 
-      // Инициализируем модальное окно с нашими настройками
-      if (window.bootstrap && window.bootstrap.Modal) {
-        // Отключаем debug-панель для этого компонента
-        if (window.M && window.M.reactive) {
-          window.M.reactive.debug = false;
-        }
-        window.StoriesModal = new window.bootstrap.Modal(modal[0], {
-          backdrop: 'static',
-          keyboard: false,
-        });
-      }
-
-      // Обработчик для кнопки закрытия
+      // Обработчик для кнопки закрытия (дублирует modal.js, но нужен для local-state tryCloseModal).
       modal.find('[data-action="close-modal"]').on('click', tryCloseModal);
 
-      // Обработчик для клика по backdrop
-      modal.on('hide.bs.modal', function (e) {
-        if (!confirmOpen) {
-          e.preventDefault();
-          tryCloseModal(e);
-        }
-      });
-
-      // Обработчик для клавиши Esc
-      $(document).on('keydown.stories-modal', function (e) {
-        if (e.key === 'Escape' && modal.hasClass('show')) {
-          tryCloseModal(e);
-        }
-      });
-
-      // Предотвращаем автозаполнение
-      modal.on('show.bs.modal', function () {
-        $(this).find('input, select').attr('autocomplete', 'off');
-      });
+      // Предотвращаем автозаполнение.
+      modal.find('input, select').attr('autocomplete', 'off');
 
       const fileInput = modal.find('.stories-editor__file-input');
       const dropzone = modal.find('.stories-editor__dropzone');
@@ -1381,6 +1348,4 @@ define(['jquery', 'core/ajax', 'core/notification'], function (
 
       // В init после инициализации состояния:
       updatePublishBtnState();
-    },
-  };
-});
+};

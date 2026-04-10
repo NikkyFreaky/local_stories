@@ -1,46 +1,45 @@
 /* eslint-disable linebreak-style, no-console */
-define(['jquery'], function ($) {
+import $ from 'jquery';
+
   let confirmCallback = null;
   let confirmOpen = false;
   let cleanupCallback = null;
-  let isAnimating = false;
-  let $modal = null;
+  let isAnimatingCreate = false;
+  let isAnimatingView = false;
+  let $createModal = null;
+  let $viewModal = null;
   let $backdrop = null;
-  let lastFocusedElement = null;
+  let createLastFocusedElement = null;
+  let viewLastFocusedElement = null;
 
   /**
-   * Показывает модальное окно и наполняет его контентом (если передан).
-   * @param {string} [contentHtml] - HTML для динамического наполнения модалки
+   * @returns {number}
    */
-  function showModal(contentHtml) {
-    if (isAnimating) {
-      return;
-    }
-    isAnimating = true;
-    lastFocusedElement = document.activeElement;
+  function visibleModalsCount() {
+    return $('.modal.show').length;
+  }
 
-    $modal = $modal || $('#stories-modal');
-    if (contentHtml) {
-      $modal.find('[data-region="stories-modal-body"]').html(contentHtml);
-    }
-
+  /**
+   * @param {jQuery} $target
+   * @param {HTMLElement|null} lastFocusedElement
+   * @param {Function} unlock
+   */
+  function showGenericModal($target, lastFocusedElement, unlock) {
     if (!$backdrop) {
       $backdrop = $('<div class="modal-backdrop fade"></div>').appendTo(
         document.body
       );
     }
 
-    // Показываем с анимацией
     requestAnimationFrame(() => {
-      $modal.addClass('show').css('display', 'block').attr({
+      $target.addClass('show').css('display', 'block').attr({
         'aria-modal': 'true',
         role: 'dialog',
       });
       $backdrop.addClass('show');
       $('body').addClass('modal-open');
 
-      // Фокус на первый интерактивный элемент
-      const $firstFocusable = $modal
+      const $firstFocusable = $target
         .find(
           'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
         )
@@ -48,12 +47,65 @@ define(['jquery'], function ($) {
       if ($firstFocusable.length) {
         $firstFocusable.focus();
       } else {
-        $modal.focus();
+        $target.focus();
       }
 
       setTimeout(() => {
-        isAnimating = false;
+        unlock();
       }, 300);
+    });
+  }
+
+  /**
+   * @param {jQuery} $target
+   * @param {HTMLElement|null} lastFocusedElement
+   * @param {Function} unlock
+   * @param {Function|null} onClosed
+   */
+  function hideGenericModal($target, lastFocusedElement, unlock, onClosed) {
+    $target.removeClass('show');
+
+    setTimeout(() => {
+      $target.css('display', '').removeAttr('aria-modal role');
+
+      if (visibleModalsCount() === 0) {
+        if ($backdrop) {
+          $backdrop.removeClass('show');
+          $backdrop.remove();
+          $backdrop = null;
+        }
+        $('body').removeClass('modal-open');
+      }
+
+      if (lastFocusedElement) {
+        lastFocusedElement.focus();
+      }
+
+      if (onClosed) {
+        onClosed();
+      }
+
+      unlock();
+    }, 300);
+  }
+
+  /**
+   * Показывает модальное окно и наполняет его контентом (если передан).
+   * @param {string} [contentHtml] - HTML для динамического наполнения модалки
+   */
+  function showModal(contentHtml) {
+    if (isAnimatingCreate) {
+      return;
+    }
+    isAnimatingCreate = true;
+    createLastFocusedElement = document.activeElement;
+
+    $createModal = $createModal || $('#stories-modal');
+    if (contentHtml) {
+      $createModal.find('[data-region="stories-create-body"]').html(contentHtml);
+    }
+    showGenericModal($createModal, createLastFocusedElement, function () {
+      isAnimatingCreate = false;
     });
   }
 
@@ -61,36 +113,53 @@ define(['jquery'], function ($) {
    * Скрывает модальное окно и убирает backdrop.
    */
   function hideModal() {
-    if (isAnimating || !$modal) {
+    if (isAnimatingCreate || !$createModal) {
       return;
     }
-    isAnimating = true;
+    isAnimatingCreate = true;
 
-    $modal.removeClass('show');
-    if ($backdrop) {
-      $backdrop.removeClass('show');
+    hideGenericModal(
+      $createModal,
+      createLastFocusedElement,
+      function () {
+        isAnimatingCreate = false;
+      },
+      function () {
+        createLastFocusedElement = null;
+        if (cleanupCallback) {
+          cleanupCallback();
+        }
+      }
+    );
+  }
+
+  /**
+   * Показывает модалку просмотра историй.
+   */
+  function showViewModal() {
+    if (isAnimatingView) {
+      return;
     }
+    isAnimatingView = true;
+    viewLastFocusedElement = document.activeElement;
+    $viewModal = $viewModal || $('#stories-view-modal');
+    showGenericModal($viewModal, viewLastFocusedElement, function () {
+      isAnimatingView = false;
+    });
+  }
 
-    setTimeout(() => {
-      $modal.css('display', '').removeAttr('aria-modal role');
-      if ($backdrop) {
-        $backdrop.remove();
-        $backdrop = null;
-      }
-      $('body').removeClass('modal-open');
-
-      // Возвращаем фокус
-      if (lastFocusedElement) {
-        lastFocusedElement.focus();
-        lastFocusedElement = null;
-      }
-
-      if (cleanupCallback) {
-        cleanupCallback();
-      }
-
-      isAnimating = false;
-    }, 300);
+  /**
+   * Скрывает модалку просмотра историй.
+   */
+  function hideViewModal() {
+    if (isAnimatingView || !$viewModal) {
+      return;
+    }
+    isAnimatingView = true;
+    hideGenericModal($viewModal, viewLastFocusedElement, function () {
+      isAnimatingView = false;
+      viewLastFocusedElement = null;
+    });
   }
 
   /**
@@ -168,8 +237,38 @@ define(['jquery'], function ($) {
     }
   }
 
-  return {
-    init: function () {
+  /**
+   * Пытается разместить панель историй в навигации темы.
+   */
+  function mountStoriesNav() {
+    const $stories = $('.stories-nav').first();
+    if (!$stories.length) {
+      return;
+    }
+
+    $('.stories-nav').not($stories).remove();
+
+    const targets = [
+      '#usernavigation',
+      '.page-header__right',
+      '.navbar-nav.ms-auto',
+      '.navbar-nav.my-1.ms-auto',
+      '#page-navbar',
+      '.navbar__breadcrumbs',
+    ];
+
+    for (let i = 0; i < targets.length; i++) {
+      const $target = $(targets[i]).first();
+      if ($target.length) {
+        if (!$stories.parent().is($target)) {
+          $target.prepend($stories);
+        }
+        return;
+      }
+    }
+  }
+
+export const init = () => {
       $(document).on(
         'click',
         '[data-action="open-stories-editor"]',
@@ -185,6 +284,15 @@ define(['jquery'], function ($) {
         tryClose
       );
 
+      $(document).on(
+        'click',
+        '#stories-view-modal [data-action="close-modal"]',
+        function (e) {
+          e.preventDefault();
+          hideViewModal();
+        }
+      );
+
       // Клик вне .modal-dialog закрывает модалку
       $(document).on('mousedown', '#stories-modal', function (e) {
         if ($(e.target).is('#stories-modal')) {
@@ -196,6 +304,12 @@ define(['jquery'], function ($) {
       $(document).on('keydown', function (e) {
         if (e.key === 'Escape' && $('#stories-modal').is(':visible')) {
           tryClose(e);
+          return;
+        }
+
+        if (e.key === 'Escape' && $('#stories-view-modal').is(':visible')) {
+          e.preventDefault();
+          hideViewModal();
         }
       });
 
@@ -225,11 +339,10 @@ define(['jquery'], function ($) {
         setCleanupCallback: setCleanupCallback,
       };
 
-      var $stories = $('.stories-nav');
-      var $usernav = $('#usernavigation');
-      if ($stories.length && $usernav.length) {
-        $usernav.prepend($stories);
-      }
-    },
-  };
-});
+      window.StoriesViewModal = {
+        show: showViewModal,
+        hide: hideViewModal,
+      };
+
+      mountStoriesNav();
+    };

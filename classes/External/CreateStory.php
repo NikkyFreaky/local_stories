@@ -1,8 +1,9 @@
 <?php
-namespace local_stories\external;
+declare(strict_types=1);
 
-defined('MOODLE_INTERNAL') || die();
+namespace local_stories\External;
 
+global $CFG;
 require_once($CFG->libdir . '/externallib.php');
 
 use external_api;
@@ -11,11 +12,11 @@ use external_value;
 use external_single_structure;
 use external_multiple_structure;
 
-class create_story extends external_api {
+class CreateStory extends external_api {
     /**
      * Описание параметров
      */
-    public static function execute_parameters() {
+    public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
             'title' => new external_value(PARAM_TEXT, 'Story title'),
             'course_id' => new external_value(PARAM_INT, 'Course ID', VALUE_DEFAULT, null),
@@ -48,7 +49,7 @@ class create_story extends external_api {
     /**
      * Создает историю
      */
-    public static function execute($title, $course_id = null, $expires_at = null, $slides = []) {
+    public static function execute($title, $course_id = null, $expires_at = null, $slides = []): array {
         global $DB, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
@@ -71,7 +72,7 @@ class create_story extends external_api {
             'expires_at' => $params['expires_at']
         ];
 
-        $story_id = \local_stories\stories::create($data);
+        $story_id = \local_stories\Stories::create($data);
 
         // Добавляем слайды
         foreach ($params['slides'] as $slide_data) {
@@ -92,17 +93,17 @@ class create_story extends external_api {
 
         return [
             'id' => $story_id,
-            'status' => \local_stories\stories::STATUS_DRAFT
+            'status' => \local_stories\Stories::STATUS_DRAFT,
         ];
     }
 
     /**
      * Описание возвращаемых данных
      */
-    public static function execute_returns() {
+    public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'id' => new external_value(PARAM_INT, 'Story ID'),
-            'status' => new external_value(PARAM_INT, 'Story status')
+            'status' => new external_value(PARAM_INT, 'Story status'),
         ]);
     }
-} 
+}
