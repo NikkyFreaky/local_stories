@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 /** @var stdClass $plugin */
 
 $plugin->component = 'local_stories';
-$plugin->version   = 2025_04_17_03;
+$plugin->version   = 2025_04_17_04;
 $plugin->requires  = 2024100700; // Moodle 4.5.0
 $plugin->dependencies = [
     'local_patterns_tools' => 2026_03_30_00,

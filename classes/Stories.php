@@ -22,7 +22,7 @@ namespace local_stories;
  * API для работы с историями.
  *
  * @package    local_stories
- * @copyright  2024 Nikita Zlobin
+ * @copyright  2025 Nikita Zlobin
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class Stories {

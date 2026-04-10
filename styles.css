@@ -135,6 +135,7 @@
   }
 
   .stories-modal__content {
+    padding: 0;
     width: 710px;
     height: 810px;
   }
@@ -641,6 +642,7 @@
   .stories-modal__footer {
     padding: 0 8px 8px 8px;
     justify-content: space-between;
+    flex-direction: row;
 
     border: none;
 
@@ -673,7 +675,8 @@
 
     .stories-editor__slides-panel {
       margin: 0;
-      display: none;
+      display: flex;
+      flex-direction: row;
       gap: 8px;
 
       .stories-editor__slides-list {
@@ -782,6 +785,7 @@
   }
 
   .stories-view-modal__content {
+    padding: 0;
     width: 400px;
     height: 740px;
     border-radius: 24px;
@@ -868,8 +872,8 @@
 
     .stories-view-modal__controls {
       position: absolute;
-      top: -90px;
-      right: -745px;
+      top: -50px;
+      left: 800px;
 
       .stories-view-modal__close {
         padding: 0;

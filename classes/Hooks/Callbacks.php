@@ -18,8 +18,10 @@ declare(strict_types=1);
 
 namespace local_stories\Hooks;
 
+use core\hook\output\before_standard_top_of_body_html_generation;
 use core\hook\output\before_footer_html_generation;
 use core\context\system;
+use local_stories\Stories;
 
 /**
  * Hook callbacks for local_stories.
@@ -30,16 +32,59 @@ use core\context\system;
  */
 final class Callbacks {
     /**
+     * Add stories navbar to top of body.
+     *
+     * @param before_standard_top_of_body_html_generation $hook
+     */
+    public static function beforeStandardTopOfBodyHtmlGeneration(before_standard_top_of_body_html_generation $hook): void {
+        global $DB, $PAGE, $USER;
+
+        if (!\isloggedin() || \isguestuser()) {
+            return;
+        }
+
+        $context = system::instance();
+        $cancreate = \has_capability('local/stories:create', $context);
+
+        $stories = Stories::get_list([
+            'status' => Stories::STATUS_PUBLISHED,
+            'active' => true,
+        ]);
+
+        foreach ($stories as &$story) {
+            $story->seen = $DB->record_exists('local_stories_views', [
+                'story_id' => $story->id,
+                'user_id' => $USER->id,
+            ]);
+        }
+        unset($story);
+
+        $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
+        $PAGE->requires->js_call_amd('local_stories/modal', 'init');
+
+        if ($cancreate) {
+            $PAGE->requires->js_call_amd('local_stories/stories', 'init');
+        }
+
+        $hook->add_html($hook->renderer->render_from_template('local_stories/navbar', [
+            'cancreate' => $cancreate,
+            'stories' => array_values($stories),
+        ]));
+    }
+
+    /**
      * Add stories modals before footer HTML generation.
      *
      * @param before_footer_html_generation $hook
      */
     public static function beforeFooterHtmlGeneration(before_footer_html_generation $hook): void {
+        if (!\isloggedin() || \isguestuser()) {
+            return;
+        }
+
         $context = system::instance();
 
-        if (\has_capability('local/stories:view', $context)) {
-            $hook->add_html($hook->renderer->render_from_template('local_stories/view_modal', []));
-        }
+        $hook->add_html($hook->renderer->render_from_template('local_stories/view_modal', []));
 
         if (\has_capability('local/stories:create', $context)) {
             $hook->add_html($hook->renderer->render_from_template('local_stories/create_modal', []));

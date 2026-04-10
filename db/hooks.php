@@ -28,6 +28,11 @@ defined('MOODLE_INTERNAL') || die();
 
 $callbacks = [
     [
+        'hook' => \core\hook\output\before_standard_top_of_body_html_generation::class,
+        'callback' => [\local_stories\Hooks\Callbacks::class, 'beforeStandardTopOfBodyHtmlGeneration'],
+        'priority' => 0,
+    ],
+    [
         'hook' => \core\hook\output\before_footer_html_generation::class,
         'callback' => [\local_stories\Hooks\Callbacks::class, 'beforeFooterHtmlGeneration'],
         'priority' => 0,

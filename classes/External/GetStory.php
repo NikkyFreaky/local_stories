@@ -11,7 +11,6 @@ use external_function_parameters;
 use external_value;
 use external_single_structure;
 use external_multiple_structure;
-use context_system;
 use local_stories\Stories;
 
 class GetStory extends external_api {
@@ -23,7 +22,11 @@ class GetStory extends external_api {
 
     public static function execute($id): array {
         global $DB;
-        \require_capability('local/stories:view', context_system::instance());
+
+        if (!\isloggedin() || \isguestuser()) {
+            throw new \moodle_exception('errornopermission', 'local_stories');
+        }
+
         $params = self::validate_parameters(self::execute_parameters(), ['id' => $id]);
         $story = $DB->get_record('local_stories', ['id' => $params['id'], 'deleted' => 0], '*', MUST_EXIST);
         if ((int)$story->status !== Stories::STATUS_PUBLISHED) {

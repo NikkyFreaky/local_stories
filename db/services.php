@@ -49,7 +49,6 @@ $functions = [
         'type' => 'read',
         'ajax' => true,
         'loginrequired' => true,
-        'capabilities' => 'local/stories:view',
     ],
     /** @see \local_stories\External\GetStoriesList::execute() */
     'local_stories_get_stories_list' => [
@@ -59,7 +58,6 @@ $functions = [
         'type' => 'read',
         'ajax' => true,
         'loginrequired' => true,
-        'capabilities' => 'local/stories:view',
     ],
 ];
 

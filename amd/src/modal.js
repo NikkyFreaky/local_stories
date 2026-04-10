@@ -237,6 +237,37 @@ import $ from 'jquery';
     }
   }
 
+  /**
+   * Пытается разместить панель историй в навигации темы.
+   */
+  function mountStoriesNav() {
+    const $stories = $('.stories-nav').first();
+    if (!$stories.length) {
+      return;
+    }
+
+    $('.stories-nav').not($stories).remove();
+
+    const targets = [
+      '#usernavigation',
+      '.page-header__right',
+      '.navbar-nav.ms-auto',
+      '.navbar-nav.my-1.ms-auto',
+      '#page-navbar',
+      '.navbar__breadcrumbs',
+    ];
+
+    for (let i = 0; i < targets.length; i++) {
+      const $target = $(targets[i]).first();
+      if ($target.length) {
+        if (!$stories.parent().is($target)) {
+          $target.prepend($stories);
+        }
+        return;
+      }
+    }
+  }
+
 export const init = () => {
       $(document).on(
         'click',
@@ -313,9 +344,5 @@ export const init = () => {
         hide: hideViewModal,
       };
 
-      var $stories = $('.stories-nav');
-      var $usernav = $('#usernavigation');
-      if ($stories.length && $usernav.length) {
-        $usernav.prepend($stories);
-      }
-};
+      mountStoriesNav();
+    };

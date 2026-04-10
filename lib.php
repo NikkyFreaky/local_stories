@@ -32,42 +32,7 @@ require_once($CFG->dirroot . '/local/stories/classes/Stories.php');
  * @return string HTML for stories buttons.
  */
 function local_stories_render_navbar_output(\core_renderer $renderer): string {
-    global $PAGE, $DB, $USER;
-    $context = \core\context\system::instance();
-
-    $can_view = has_capability('local/stories:view', $context);
-    $can_create = has_capability('local/stories:create', $context);
-
-    if (!$can_view) {
-        return '';
-    }
-
-    $stories = \local_stories\Stories::get_list([
-        'status' => \local_stories\Stories::STATUS_PUBLISHED,
-        'active' => true,
-    ]);
-
-    // Добавляем информацию о просмотре
-    foreach ($stories as &$story) {
-        $story->seen = $DB->record_exists('local_stories_views', [
-            'story_id' => $story->id,
-            'user_id' => $USER->id,
-        ]);
-    }
-
-    $PAGE->requires->js_call_amd('local_stories/viewer', 'init');
-    $PAGE->requires->js_call_amd('local_stories/modal', 'init');
-
-    if ($can_create) {
-        $PAGE->requires->js_call_amd('local_stories/stories', 'init');
-    }
-
-    $template_context = [
-        'cancreate' => $can_create,
-        'stories' => array_values($stories),
-    ];
-
-    return $renderer->render_from_template('local_stories/navbar', $template_context);
+    return '';
 }
 
 /**
